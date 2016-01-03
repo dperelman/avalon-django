@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Welcome to the Resistance</h2>
+    <br>
+    <div class="button-container">
+      <a href="{% url 'new_game' %}" class="button button-new-game">New Game</a>
+      <a href="{% url 'enter_code' %}" class="button button-join-game">Join Game</a>
+    </div>
+{% endblock %}

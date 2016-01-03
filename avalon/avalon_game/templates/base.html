@@ -1,0 +1,37 @@
+{% load staticfiles %}
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="{% static 'css/normalize.css' %}" type="text/css">
+  <link rel="stylesheet" href="{% static 'css/skeleton.css' %}" type="text/css">
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}" type="text/css">
+   <title>Resistance</title>
+</head>
+
+<body>
+  <div class="container">
+    {% block accesscode %}
+    <div class="access-code">
+      <p>Access Code: {{ access_code|default:"(not in game)" }}</p>
+    </div>
+    {% endblock %}
+    {% block score %}
+    <div class="score">
+      <div class="score-box"><p></p></div>
+      <div class="score-box"><p></p></div>
+      <div class="score-box"><p></p></div>
+      <div class="score-box"><p></p></div>
+      <div class="score-box"><p></p></div>
+    </div>
+    {% endblock %}
+    <br>
+    {% block content %}{% endblock %}
+    <br>
+    {% block history %}{% endblock %}
+    <hr>
+
+    <p class="small"><a href="https://boardgamegeek.com/boardgame/41114/resistance" target="_blank">The Resistance: Avalon</a> was designed by Don Eskridge </p>
+    <p class="small">and published by <a href="http://www.indieboardsandcards.com/resistance.php">Indie Cards and Games</a></p>
+    <p class="small">Built by <a href="https://aweirdimagination.net/" target="_blank">Daniel Perelman</a> based on <a href="http://alantran.co" target="_blank">Alan Tran</a>'s <a href="https://github.com/athtran/avalon" target="_blank">Avalon app</a> | <a href="https://github.com/dperelman/avalon-django" target="_blank">Github Link</a></p>
+  </div>
+</body>

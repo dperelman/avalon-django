@@ -1,5 +1,9 @@
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.views.decorators.http import require_safe,\
+                                         require_POST,\
+                                         require_http_methods
+
 from .models import Game, Player
 
 # helpers to interpret arguments
@@ -20,14 +24,23 @@ def lookup_player_secret(func):
 
 # views
 
+@require_safe
 def index(request):
-    pass
+    return render(request, 'index.html')
 
+@require_http_methods(["HEAD", "GET", "POST"])
 def enter_code(request):
-    pass
+    if request.method == 'GET':
+        pass
+    elif request.method == 'POST':
+        pass
 
+@require_http_methods(["HEAD", "GET", "POST"])
 def new_game(request):
-    pass
+    if request.method == 'GET':
+        pass
+    elif request.method == 'POST':
+        pass
 
 @lookup_access_code
 def join_game(request, game):

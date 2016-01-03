@@ -1,0 +1,342 @@
+/* CSS declarations go here */
+body {
+  text-align: center;
+  font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Raleway", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #222;
+}
+
+p {
+  margin: 0;
+}
+
+h2 {
+  margin: 0;
+  font-size: 24px;
+  text-align: center;
+  font-family: "Raleway", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+p.small {
+  text-align: center;
+  font-size: 12px;
+  color: darkgrey;
+}
+
+p a {
+  color: darkgrey;
+}
+
+.container {
+  max-width: 500px;
+  margin: 5% auto 0 auto;
+  background: white;
+}
+
+@media (max-width: 600px) {
+  .container {
+    width: 100%;
+  }
+}
+
+h1 {
+  font-size: 1.5em;
+  margin: 0;
+  margin-bottom: 10px;
+  display: inline-block;
+  margin-right: 1em;
+}
+
+li {
+  position: relative;
+  list-style: none;
+  padding: 15px;
+  border-bottom: #eee solid 1px;
+}
+
+.button-container {
+  display: flex;
+}
+
+button, .button {
+  width: 100%;
+  background-color: white;
+  border-radius: 4px;
+  color: #555;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #bbb;
+  height: 38px;
+  line-height: 38px;
+  padding: 0 30px;
+  letter-spacing: .1rem;
+  text-transform: uppercase;
+  box-sizing: border-box;
+  margin: 1em;
+}
+/* From http://stackoverflow.com/a/2906586 */
+.button {
+    -webkit-appearance: button;
+    -moz-appearance: button;
+    appearance: button;
+
+    text-decoration: none;
+}
+
+button.ready {
+  background-color: #eee;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+input[type="text"] {
+  margin: 1em;
+  height: 40px;
+  font-size: 20px;
+}
+
+.chosen {
+  background-color: #D7E4F3;
+}
+
+.spy {
+  color: #FB6C6C;
+  border: #FB6C6C solid 1px;
+}
+
+.role {
+  font-family: arial;
+  color: #333;
+}
+
+.resistance {
+  color: #26B2F5;
+}
+
+.ready {
+  background-color: #B6FFC9;
+}
+
+.score {
+  display: flex;
+}
+
+.score-box {
+  display: flex;
+  margin: 5px;
+  background-color: #eee;
+  height: 20px;
+  width: 20%;
+  border-radius: 4px;
+  align-content: center;
+}
+
+.score-box > p {
+  color: #aaa;
+  height: .5em;
+  margin: auto;
+  margin-bottom: 13px;
+  font-size: 12px;
+}
+
+.pass {
+  background-color: #26B2F5;
+}
+
+.pass p,
+.fail p {
+  color: white;
+}
+
+.fail {
+  background-color: #FB6C6C;
+}
+
+#voteHeader > h2 {
+  font-size: 18px;
+}
+
+#voteResults {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  border-radius: 4px;
+  background-color: #eee;
+  display: none;
+}
+
+.voteContainer {
+  margin-top: 20px;
+}
+
+.voteContainer,
+.voters,
+.game-options,
+.role-options {
+  flex-direction: column;
+}
+
+.voteSubContainer,
+.voteContainer,
+.voters,
+.lobby-info,
+.game-options,
+.role-options {
+  display: flex;
+}
+
+li.voter {
+  padding: 0;
+  border: 0;
+}
+
+.voteSubContainer > div {
+  width: 50%;
+}
+
+.alert-player-connected,
+.alert-game-started,
+.alert-unique-name,
+.player-alert-5,
+.player-alert-10 {
+  color: #D25959;
+  display: none;
+}
+
+.red {
+  color: #D25959;
+}
+
+.lobby-info > div{
+  width: 50%;
+}
+
+.game-options li {
+  text-align: left;
+  margin: 0;
+  padding: 10px;
+  border-bottom: 0;
+}
+
+input[type="checkbox"] {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+label {
+  display: inline;
+}
+
+.role-options,
+#role-info {
+  display: none;
+}
+
+.role-info p {
+  font-size: 12px;
+}
+
+hr.small-hr {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+#history {
+  empty-cells: show;
+  background: purple;
+}
+
+#history thead th {
+  padding: 0;
+  padding-bottom: 0.2em;
+  width: 2em;
+  background: white;
+}
+#history thead th p {
+  -ms-writing-mode: tb-rl;
+  -webkit-writing-mode: vertical-rl;
+  -moz-writing-mode: vertical-rl;
+  -ms-writing-mode: vertical-rl;
+  writing-mode: vertical-rl;
+  text-align: end;
+  margin-left: auto;
+  margin-right: auto;
+  min-height: 5em;
+}
+#history tbody {
+  background: purple;
+}
+#history tbody td {
+  text-align: center;
+  /* TODO Why does this not fill the cell? */
+  font-size: 1em;
+  padding: 0;
+  margin: 0;
+}
+#history tbody td.accept:before {
+  color: green;
+  content: "\2713";
+}
+#history tbody td.reject:before {
+  color: brown;
+  content: "\2717";
+}
+#history tbody tr.pending {
+  background: #ffffcc;
+}
+#history tbody tr.voting {
+  background: #e3e3ab;
+}
+#history tbody tr.voting td.chosen {
+  background: #bbbb00;
+}
+#history tbody tr.reject {
+  background: #dddddd;
+}
+#history tbody tr.reject td.chosen {
+  background: #aaaaaa;
+}
+#history tbody tr.accept-pending {
+  background: #ffc799;
+}
+#history tbody tr.accept-pending td.chosen {
+  background: orange;
+}
+#history tbody tr.fail {
+  background: #e69e9e;
+}
+#history tbody tr.fail td.chosen {
+  background: #ff1616;
+}
+#history tbody tr.pass {
+  background: #ccccff;
+}
+#history tbody tr.pass td.chosen {
+  background: #6666ff;
+}
+#history tbody tr.summary.fail {
+  background: red;
+}
+#history tbody tr.summary.pass {
+  background: blue;
+}
+#history tbody td {
+  border: solid #e1e1e1 1px;
+  padding: 0;
+  width: 2em;
+  height: 2em;
+  min-width: 2em;
+  max-width: 2em;
+  min-height: 2em;
+  max-height: 2em;
+}
+#history tbody td.leader {
+  border-radius: 50%;
+}
+#history tbody td.chosen {
+  border: solid black 3px;
+}
