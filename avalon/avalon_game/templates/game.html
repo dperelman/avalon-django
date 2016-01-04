@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% block game_header %}{% endblock %}
+{% block game_content %}{% endblock %}
+    <div class="button-container">
+      <a href="{% url 'game' access_code=access_code player_secret=player_secret %}" class="button">Refresh</a>
+    </div>
+{% endblock %}

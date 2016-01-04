@@ -7,13 +7,15 @@ urlpatterns = [
     url(r'^join/$', views.enter_code, name='enter_code'),
     url(r'^new/$', views.new_game, name='new_game'),
     url(r'^(?P<access_code>[a-z]{6})/', include([
-        url(r'$', views.join_game, name='join_game'),
+        url(r'^$', views.join_game, name='join_game'),
         url(r'(?P<player_secret>[a-z]{8})/', include([
             url(r'^$', views.game, name='game'),
+            url(r'^start/$', views.start, name='start'),
+            url(r'^leave/$', views.leave, name='leave'),
             url(r'^ready/$', views.ready, name='ready'),
             url(r'^vote/(?P<round_num>[1-5])/(?P<vote_num>[1-5])/(?P<vote>(approve|reject))/$', views.vote, name='vote'),
             url(r'^choose/(?P<round_num>[1-5])/(?P<vote_num>[1-5])/(?P<who>[0-9]+)/$', views.choose, name='choose'),
-            url(r'^remove/(?P<round_num>[1-5])/(?P<vote_num>[1-5])/(?P<who>[0-9]+)/$', views.remove, name='remove'),
+            url(r'^remove/(?P<round_num>[1-5])/(?P<vote_num>[1-5])/(?P<who>[0-9]+)/$', views.unchoose, name='unchoose'),
             url(r'^mission/(?P<round_num>[1-5])/(?P<mission_action>(success|fail))/$', views.mission, name='mission'),
             url(r'^assassinate/(?P<target>[0-9]+)/$', views.choose, name='choose'),
         ])),

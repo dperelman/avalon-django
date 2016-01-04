@@ -1,0 +1,31 @@
+{% extends "game.html" %}
+
+{% block game_content %}
+  <div class="lobby">
+    <h2>Lobby</h2>
+    <form method="post">
+      {% csrf_token %}
+      <div class="lobby-info">
+        <div class="access-code">
+          <p>Access Code: {{ access_code }}</p>
+        </div>
+        <div class="game-options">
+          <p class="options-header">Options</p>
+          <div class="role-options">
+            {{ form.as_ul }}
+          </div>
+        </div>
+      </div>
+      <ul>
+        {% for player in players %}
+          <li>{{ player.name }}</li>
+        {% endfor %}
+      </ul>
+
+      <div class="button-container">
+        <button type="submit" formaction="{% url 'start' access_code=access_code player_secret=player_secret %}" class="button-start">Start</button>
+        <button type="submit" formaction="{% url 'leave' access_code=access_code player_secret=player_secret %}" class="button-leave">Leave</button>
+      </div>
+    </form>
+  </div>
+{% endblock %}

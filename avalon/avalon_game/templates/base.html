@@ -5,7 +5,8 @@
   <link rel="stylesheet" href="{% static 'css/normalize.css' %}" type="text/css">
   <link rel="stylesheet" href="{% static 'css/skeleton.css' %}" type="text/css">
   <link rel="stylesheet" href="{% static 'css/styles.css' %}" type="text/css">
-   <title>Resistance</title>
+  <script src="{% static 'js/jquery-2.1.4.min.js' %}"></script>
+  <title>Resistance</title>
 </head>
 
 <body>
@@ -17,11 +18,15 @@
     {% endblock %}
     {% block score %}
     <div class="score">
+      {% for round_num, round in round_scores.items %}
+      <div class="score-box {{ round.winner }}"><p>{{ round.mission_size }}</p></div>
+      {% empty %}
       <div class="score-box"><p></p></div>
       <div class="score-box"><p></p></div>
       <div class="score-box"><p></p></div>
       <div class="score-box"><p></p></div>
       <div class="score-box"><p></p></div>
+      {% endfor %}
     </div>
     {% endblock %}
     <br>

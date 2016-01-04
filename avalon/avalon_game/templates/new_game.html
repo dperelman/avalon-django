@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>New Game</h2>
+
+    <form class="new-game-form" action="#" method="post">
+      {% csrf_token %}
+      <table>
+      {{ form.as_table }}
+      </table>
+      <div class="button-container">
+        <input type="submit" class="button button-create" value="Create"></input>
+        <a href="{% url 'index' %}" class="button button-main-menu">Back</a>
+      </div>
+    </form>
+{% endblock %}

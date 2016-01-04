@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Join Game</h2>
+
+    <form class="join-game-form" action="{% url 'enter_code' %}" method="post">
+      {% csrf_token %}
+      <table>
+      {{ form.as_table }}
+      </table>
+
+      <div class="button-container">
+        <input type="submit" class="button button-join" value="Join"></input>
+        <a href="{% url 'index' %}" class="button button-main-menu">Back</a>
+      </div>
+    </form>
+{% endblock %}

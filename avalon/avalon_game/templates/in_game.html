@@ -1,0 +1,57 @@
+{% extends "game.html" %}
+
+{% block game_header %}
+  <div class="role-info">
+    <hr class="small-hr">
+    <div id="role-info">
+      <p>Team: <b class="{{ player.team }}">{{ player.team|title }}</b> | Role: {{ player.role_string }}</p>
+
+      {% if player.is_spy and not player.is_oberon %}
+      <p>Other spies:
+        {% for spy in visible_spies %}
+        <b class="spy">{{ spy.name }} </b>
+        {% endfor %}
+      </p>
+      {% endif %}
+
+      {% if player.is_merlin %}
+      <p>The spies {% if game_has_mordred %}(except Mordred){% endif %} are:
+        {% for spy in visible_spies %}
+        <b class="spy">{{ spy.name }} </b>
+        {% endfor %}
+      </p>
+      {% endif %}
+
+      {% if player.is_percival %}
+      <p>Merlin is {{ possible_merlins }}.</p>
+      {% endif %}
+
+      {% if player.is_assassin %}
+      <p>Try to see if you can spot who the Merlin is. You'll have a chance to identify him at the end of the game to win it.</p>
+      {% endif %}
+
+      {% if player.is_morgana %}
+      <p>Percival sees you as Merlin.</p>
+      {% endif %}
+
+      {% if player.is_mordred %}
+      <p>Merlin does not know you are a spy.</p>
+      {% endif %}
+    </div>
+    <p id="role-info-hidden">
+      Tap to view role info
+    </p>
+  </div>
+
+  <script>
+    $(document).ready(function () {
+      $('.role-info').click(function () {
+        $('#role-info').toggle();
+        $('#role-info-hidden').toggle();
+      })
+    })
+  </script>
+{% endblock %}
+
+{% block history %}
+{% endblock %}

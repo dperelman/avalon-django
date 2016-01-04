@@ -218,7 +218,7 @@ li.voter {
 .game-options li {
   text-align: left;
   margin: 0;
-  padding: 10px;
+  padding: 0;
   border-bottom: 0;
 }
 
@@ -231,7 +231,6 @@ label {
   display: inline;
 }
 
-.role-options,
 #role-info {
   display: none;
 }
