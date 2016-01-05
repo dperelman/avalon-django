@@ -9,7 +9,7 @@ from django.views.decorators.http import require_safe,\
 
 from .forms import NewGameForm, JoinGameForm, StartGameForm
 from .helpers import mission_size, mission_size_string
-from .models import Game, GameRound, Player
+from .models import Game, GameRound, Player, PlayerVote, VoteRound
 
 # helpers to interpret arguments
 def lookup_access_code(func):
@@ -26,6 +26,12 @@ def lookup_player_secret(func):
 
     return with_player
 
+def nums_to_int(func):
+    def with_int(request, game, player, round_num, vote_num, *args, **kwargs):
+        return func(request, game, player, int(round_num), int(vote_num),
+                    *args, **kwargs)
+
+    return with_int
 
 # views
 
@@ -81,6 +87,7 @@ def game_base_context(game, player):
     context['player_secret'] = player.secret_id
     context['players'] = players
     context['player'] = player
+    context['num_players'] = num_players
 
     try:
         round_scores = {}
@@ -118,11 +125,48 @@ def game(request, game, player):
     elif game.game_phase == Game.GAME_PHASE_ROLE:
         return render(request, 'role_phase.html', context)
     elif game.game_phase == Game.GAME_PHASE_PICK:
-        pass
+        vote_round = VoteRound.objects.get_current_vote_round(game=game)
+        assert vote_round.vote_status == VoteRound.VOTE_STATUS_WAITING
+        context['chosen'] = vote_round.chosen.all()
+        context['vote_rejected'] = not vote_round.is_first_vote()
+        context['leader'] = vote_round.leader
+        context['round_num'] = vote_round.game_round.round_num
+        context['vote_num'] = vote_round.vote_num
+        context['team_size'] = vote_round.game_round.num_players_on_mission()
+        if vote_round.leader == player:
+            return render(request, 'pick.html', context)
+        else:
+            return render(request, 'pick_wait.html', context)
     elif game.game_phase == Game.GAME_PHASE_VOTE:
-        pass
+        vote_round = VoteRound.objects.get_current_vote_round(game=game)
+        assert vote_round.vote_status == VoteRound.VOTE_STATUS_VOTING
+        context['chosen'] = vote_round.chosen.all()
+        context['leader'] = vote_round.leader
+        context['round_num'] = vote_round.game_round.round_num
+        context['vote_num'] = vote_round.vote_num
+        player_vote = PlayerVote.objects.filter(vote_round=vote_round,
+                                                player=player)
+        if player_vote:
+            if player_vote.get().accept:
+                context['player_vote'] = 'accept'
+            else:
+                context['player_vote'] = 'reject'
+        player_votes = PlayerVote.objects.filter(vote_round=vote_round).count()
+        num_players = context['num_players']
+        context['missing_votes_count'] = num_players - player_votes
+        return render(request, 'vote.html', context)
     elif game.game_phase == Game.GAME_PHASE_MISSION:
-        pass
+        vote_round = VoteRound.objects.get_current_vote_round(game=game)
+        assert vote_round.vote_status == VoteRound.VOTE_STATUS_VOTED
+        chosen = vote_round.chosen.all()
+        context['chosen'] = chosen
+        context['leader'] = vote_round.leader
+        context['round_num'] = vote_round.game_round.round_num
+        context['vote_num'] = vote_round.vote_num
+        if player in chosen:
+            return render(request, 'mission.html', context)
+        else:
+            return render(request, 'mission_wait.html', context)
     elif game.game_phase == Game.GAME_PHASE_ASSASSIN:
         pass
     elif game.game_phase == Game.GAME_PHASE_END:
@@ -218,29 +262,152 @@ def ready(request, game, player):
         if not Player.objects.filter(game=game, ready=False):
             game.game_phase = Game.GAME_PHASE_PICK
             game.save()
-            GameRound.objects.create(game=game, round_num=1)
+            game_round = GameRound.objects.create(game=game, round_num=1)
+            first_leader = Player.objects.get(game=game, order=0)
+            vote_round = VoteRound.objects.create(game_round=game_round,
+                                                  vote_num=1,
+                                                  leader=first_leader)
 
     return redirect('game', access_code=game.access_code,
                     player_secret=player.secret_id)
 
 @lookup_access_code
 @lookup_player_secret
+@nums_to_int
+@require_POST
 def choose(request, game, player, round_num, vote_num, who):
-    pass
+    player.save()
+
+    if game.game_phase == Game.GAME_PHASE_PICK:
+        vote_round = VoteRound.objects.get_current_vote_round(game=game)
+        if vote_round.vote_status == VoteRound.VOTE_STATUS_WAITING\
+                and vote_round.game_round.round_num == round_num\
+                and vote_round.vote_num == vote_num\
+                and vote_round.leader == player:
+            chosen_player = Player.objects.get(game=game, order=who)
+            vote_round.chosen.add(chosen_player)
+            vote_round.save()
+
+    return redirect('game', access_code=game.access_code,
+                    player_secret=player.secret_id)
 
 @lookup_access_code
 @lookup_player_secret
+@nums_to_int
+@require_POST
 def unchoose(request, game, player, round_num, vote_num, who):
-    pass
+    player.save()
+
+    if game.game_phase == Game.GAME_PHASE_PICK:
+        vote_round = VoteRound.objects.get_current_vote_round(game=game)
+        if vote_round.vote_status == VoteRound.VOTE_STATUS_WAITING\
+                and vote_round.game_round.round_num == round_num\
+                and vote_round.vote_num == vote_num\
+                and vote_round.leader == player:
+            chosen_player = Player.objects.get(game=game, order=who)
+            vote_round.chosen.remove(chosen_player)
+            vote_round.save()
+
+    return redirect('game', access_code=game.access_code,
+                    player_secret=player.secret_id)
 
 @lookup_access_code
 @lookup_player_secret
+@nums_to_int
+@require_POST
+def finalize_team(request, game, player, round_num, vote_num):
+    player.save()
+
+    if game.game_phase == Game.GAME_PHASE_PICK:
+        vote_round = VoteRound.objects.get_current_vote_round(game=game)
+        if vote_round.vote_status == VoteRound.VOTE_STATUS_WAITING\
+                and vote_round.game_round.round_num == round_num\
+                and vote_round.vote_num == vote_num\
+                and vote_round.leader == player\
+                and vote_round.is_chosen_correct_size():
+            vote_round.vote_status = VoteRound.VOTE_STATUS_VOTING
+            vote_round.save()
+            game.game_phase = Game.GAME_PHASE_VOTE
+            game.save()
+
+    return redirect('game', access_code=game.access_code,
+                    player_secret=player.secret_id)
+
+@lookup_access_code
+@lookup_player_secret
+@nums_to_int
+@require_POST
+def retract_team(request, game, player, round_num, vote_num):
+    player.save()
+
+    if game.game_phase == Game.GAME_PHASE_VOTE:
+        vote_round = VoteRound.objects.get_current_vote_round(game=game)
+        if vote_round.vote_status == VoteRound.VOTE_STATUS_VOTING\
+                and vote_round.game_round.round_num == round_num\
+                and vote_round.vote_num == vote_num\
+                and vote_round.leader == player:
+            vote_round.vote_status = VoteRound.VOTE_STATUS_WAITING
+            vote_round.save()
+            game.game_phase = Game.GAME_PHASE_PICK
+            game.save()
+            PlayerVote.objects.filter(vote_round=vote_round).delete()
+
+    return redirect('game', access_code=game.access_code,
+                    player_secret=player.secret_id)
+
+@lookup_access_code
+@lookup_player_secret
+@nums_to_int
+@require_POST
 def vote(request, game, player, round_num, vote_num, vote):
-    pass
+    player.save()
+
+    if game.game_phase == Game.GAME_PHASE_VOTE:
+        vote_round = VoteRound.objects.get_current_vote_round(game=game)
+        if vote_round.vote_status == VoteRound.VOTE_STATUS_VOTING\
+                and vote_round.game_round.round_num == round_num\
+                and vote_round.vote_num == vote_num:
+            accept = vote == "approve"
+            PlayerVote.objects.update_or_create(defaults={'accept': accept},
+                                                vote_round=vote_round,
+                                                player=player)
+            num_players = Player.objects.filter(game=game).count()
+            if PlayerVote.objects.filter(vote_round=vote_round).count()\
+                    == num_players:
+                # All players voted, voting round is over.
+                vote_round.vote_status = VoteRound.VOTE_STATUS_VOTED
+                vote_round.save()
+                accepts = PlayerVote.objects.filter(vote_round=vote_round,
+                                                    accept=True)
+                rejects = PlayerVote.objects.filter(vote_round=vote_round,
+                                                    accept=False)
+                if accepts.count() > rejects.count():
+                    # Team was approved
+                    game.game_phase = Game.GAME_PHASE_MISSION
+                else:
+                    # Team was rejected
+                    if vote_round.is_final_vote():
+                        game.game_phase = Game.GAME_PHASE_END
+                    else:
+                        game.game_phase = Game.GAME_PHASE_PICK
+                        new_leader_order = (vote_round.leader.order + 1)\
+                                            % num_players
+                        new_leader = Player.objects.get(game=game,
+                                                        order=new_leader_order)
+                        VoteRound.objects\
+                                 .create(game_round=vote_round.game_round,
+                                         vote_num=vote_round.vote_num+1,
+                                         leader=new_leader)
+                game.save()
+
+    return redirect('game', access_code=game.access_code,
+                    player_secret=player.secret_id)
 
 @lookup_access_code
 @lookup_player_secret
 def mission(request, game, player, round_num, mission_action):
+    round_num = int(round_num)
+
     pass
 
 @lookup_access_code

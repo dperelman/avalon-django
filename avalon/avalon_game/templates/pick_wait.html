@@ -1,0 +1,25 @@
+{% extends "in_game.html" %}
+
+{% block game_content %}
+  <div class="pick-phase">
+    <h2>Pick Phase</h2>
+    {% if vote_rejected %}
+      <p class="red">
+        The previous vote has been rejected. A new leader has been chosen.
+      </p>
+    {% endif %}
+    This will be vote #{{ vote_num }} of 5 for this mission.
+
+    {% if chosen %}
+      <p>Your leader, <b class="role">{{ leader.name }}</b>, is choosing {{ team_size }} players for mission {{ round_num }}: </p>
+      {% for chosen_player in chosen %}
+      <li>{{ chosen_player.name }}</li>
+      {% endfor %}
+    {% endif %}
+    {% if player in chosen %}
+      <p>You have been chosen!</p>
+    {% else %}
+      <p>Please wait while your leader, {{ leader.name }}, chooses a team.</p>
+    {% endif %}
+  </div>
+{% endblock %}

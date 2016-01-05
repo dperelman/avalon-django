@@ -7,6 +7,8 @@ import string
 from django.db import models
 from django.utils import timezone
 
+from .helpers import mission_size
+
 def generate_code(length):
     return "".join([random.choice(string.ascii_lowercase)
                     for i in xrange(length)])
@@ -143,11 +145,17 @@ class Player(models.Model):
     def appears_as_merlin(self):
         return self.is_merlin() or self.is_morgana()
 
+class GameRoundManager(models.Manager):
+    def get_current_game_round(self, game):
+        return self.filter(game=game).order_by('-round_num').first()
+
 class GameRound(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE, db_index=True)
     round_num = models.IntegerField()
     unique_together = (("game", "round_num"),)
     mission_passed = models.NullBooleanField()
+
+    objects = GameRoundManager()
 
     def winner_string(self):
         if self.mission_passed is None:
@@ -157,11 +165,27 @@ class GameRound(models.Model):
         else:
             return 'spy'
 
+    def num_players_on_mission(self):
+        num_players = Player.objects.filter(game=self.game).count()
+        return mission_size(num_players=num_players,
+                            round_num=self.round_num)[0]
+
+    def num_fails_required(self):
+        num_players = Player.objects.filter(game=self.game).count()
+        return mission_size(num_players=num_players,
+                            round_num=self.round_num)[1]
+
 class MissionAction(models.Model):
     game_round = models.ForeignKey(GameRound, on_delete=models.CASCADE, db_index=True)
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     unique_together = (("game", "player"),)
     played_success = models.NullBooleanField()
+
+class VoteRoundManager(models.Manager):
+    def get_current_vote_round(self, game=None, game_round=None):
+        if game_round is None:
+            game_round = GameRound.objects.get_current_game_round(game=game)
+        return self.filter(game_round=game_round).order_by('-vote_num').first()
 
 class VoteRound(models.Model):
     game_round = models.ForeignKey(GameRound, on_delete=models.CASCADE, db_index=True)
@@ -174,8 +198,19 @@ class VoteRound(models.Model):
     leader = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='vote_round_leader')
     chosen = models.ManyToManyField(Player, related_name='vote_round_chosen')
 
+    objects = VoteRoundManager()
+
+    def is_first_vote(self):
+        return self.vote_num == 1
+
+    def is_chosen_correct_size(self):
+        return self.chosen.count() == self.game_round.num_players_on_mission()
+
+    def is_final_vote(self):
+        return self.vote_num == 5
+
 class PlayerVote(models.Model):
     vote_round = models.ForeignKey(VoteRound, on_delete=models.CASCADE, db_index=True)
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     unique_together = (("vote_round", "player"),)
-    accept = models.NullBooleanField()
+    accept = models.BooleanField()

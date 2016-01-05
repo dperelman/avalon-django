@@ -1,0 +1,34 @@
+{% extends "in_game.html" %}
+
+{% block game_content %}
+  <div class="pick-phase">
+    <h2>Pick Phase</h2>
+    {% if vote_rejected %}
+      <p class="red">
+        The previous vote has been rejected. You are now the leader.
+      </p>
+    {% endif %}
+    This will be vote #{{ vote_num }} of 5 for this mission.
+
+    <p><b>You are the leader!</b> Tap on the names to choose a team
+      of {{ team_size }} players for mission {{ round_num }}.</p>
+    <ul>
+      {% for p in players %}
+      <li class="player {% if p in chosen %}chosen{% endif %}">
+        <form method="post" action="{% if p in chosen %}{% url 'unchoose' access_code=access_code player_secret=player_secret round_num=round_num vote_num=vote_num who=p.order %}{% else %}{% url 'choose' access_code=access_code player_secret=player_secret round_num=round_num vote_num=vote_num who=p.order %}{% endif %}">
+          {% csrf_token %}
+          <div class="button-container">
+            <button type="submit">{{ p.name }}</button>
+          </div>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    <form method="post" action="{% url 'finalize_team' access_code=access_code player_secret=player_secret round_num=round_num vote_num=vote_num %}">
+      {% csrf_token %}
+      <div class="button-container">
+        <button type="submit" class="{% if chosen.count == team_size %}ready{% endif %}">Submit</button>
+      </div>
+    </form>
+  </div>
+{% endblock %}

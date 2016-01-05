@@ -100,7 +100,7 @@ input[type="text"] {
   font-size: 20px;
 }
 
-.chosen {
+.chosen, .chosen button {
   background-color: #D7E4F3;
 }
 
@@ -242,6 +242,11 @@ label {
 hr.small-hr {
   margin-top: 10px;
   margin-bottom: 10px;
+}
+
+li.player, li.player form {
+  margin: 0;
+  padding: 0;
 }
 
 #history {
