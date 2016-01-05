@@ -10,6 +10,7 @@ urlpatterns = [
         url(r'^$', views.join_game, name='join_game'),
         url(r'(?P<player_secret>[a-z]{8})/', include([
             url(r'^$', views.game, name='game'),
+            url(r'^status/$', views.status, name='status'),
             url(r'^start/$', views.start, name='start'),
             url(r'^leave/$', views.leave, name='leave'),
             url(r'^ready/$', views.ready, name='ready'),

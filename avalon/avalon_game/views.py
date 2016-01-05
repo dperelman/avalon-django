@@ -1,6 +1,8 @@
+import json
 import math
 import random
 
+from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_safe,\
@@ -78,12 +80,58 @@ def join_game(request, game):
     return render(request, 'join_game.html', {'access_code': game.access_code,
                                               'form': form})
 
+def game_status_string(game, player):
+    game_status_object = {}
+
+    game_status_object['game_phase'] = game.game_phase_string()
+
+    players = Player.objects.filter(game=game)
+    num_players = players.count()
+
+    if game.game_phase == Game.GAME_PHASE_LOBBY:
+        game_status_object['players'] = [p.name for p in players]
+    elif game.game_phase == Game.GAME_PHASE_ROLE:
+        ready_players = Player.objects.filter(game=game, ready=True)\
+                                      .order_by('order')
+        game_status_object['ready'] = [p.name for p in ready_players]
+    else:
+        vote_round = VoteRound.objects.get_current_vote_round(game)
+        game_status_object['round_num'] = vote_round.game_round.round_num
+        game_status_object['vote_num'] = vote_round.vote_num
+    if game.game_phase == Game.GAME_PHASE_PICK:
+        chosen = vote_round.chosen.order_by('order').all()
+        game_status_object['chosen'] = [p.name for p in chosen]
+    elif game.game_phase == Game.GAME_PHASE_VOTE:
+        votes_cast = PlayerVote.objects.filter(vote_round=vote_round).count()
+        game_status_object['missing_votes_count'] = num_players - votes_cast
+        player_vote = PlayerVote.objects.filter(vote_round=vote_round,
+                                                player=player)
+        if player_vote:
+            if player_vote.get().accept:
+                game_status_object['player_vote'] = 'accept'
+            else:
+                game_status_object['player_vote'] = 'reject'
+        else:
+            game_status_object['player_vote'] = 'none'
+
+    return json.dumps(game_status_object)
+
+@lookup_access_code
+@lookup_player_secret
+@require_safe
+@transaction.non_atomic_requests
+def status(request, game, player):
+    player.save()
+
+    return HttpResponse(game_status_string(game, player))
+
 def game_base_context(game, player):
     players = Player.objects.filter(game=game).order_by('order')
     num_players = players.count()
 
     context = {}
 
+    context['status'] = game_status_string(game, player)
     context['access_code'] = game.access_code
     context['player_secret'] = player.secret_id
     context['players'] = players
@@ -128,7 +176,7 @@ def game(request, game, player):
     elif game.game_phase == Game.GAME_PHASE_PICK:
         vote_round = VoteRound.objects.get_current_vote_round(game=game)
         assert vote_round.vote_status == VoteRound.VOTE_STATUS_WAITING
-        context['chosen'] = vote_round.chosen.all()
+        context['chosen'] = vote_round.chosen.order_by('order').all()
         context['vote_rejected'] = not vote_round.is_first_vote()
         context['leader'] = vote_round.leader
         context['round_num'] = vote_round.game_round.round_num
@@ -141,7 +189,7 @@ def game(request, game, player):
     elif game.game_phase == Game.GAME_PHASE_VOTE:
         vote_round = VoteRound.objects.get_current_vote_round(game=game)
         assert vote_round.vote_status == VoteRound.VOTE_STATUS_VOTING
-        context['chosen'] = vote_round.chosen.all()
+        context['chosen'] = vote_round.chosen.order_by('order').all()
         context['leader'] = vote_round.leader
         context['round_num'] = vote_round.game_round.round_num
         context['vote_num'] = vote_round.vote_num
@@ -159,7 +207,7 @@ def game(request, game, player):
     elif game.game_phase == Game.GAME_PHASE_MISSION:
         vote_round = VoteRound.objects.get_current_vote_round(game=game)
         assert vote_round.vote_status == VoteRound.VOTE_STATUS_VOTED
-        chosen = vote_round.chosen.all()
+        chosen = vote_round.chosen.order_by('order').all()
         context['chosen'] = chosen
         context['leader'] = vote_round.leader
         context['round_num'] = vote_round.game_round.round_num

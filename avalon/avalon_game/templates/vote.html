@@ -12,7 +12,7 @@
     {% endfor %}
   </ul>
 
-  <p><b>Waiting for {% if missing_votes_count == 1 %}1 person{% else %}{{ missing_votes_count }} people{% endif %} to vote.</b></p>
+  <p><b>Waiting for <span id="missing-votes">{% if missing_votes_count == 1 %}1 person{% else %}{{ missing_votes_count }} people{% endif %}</span> to vote.</b></p>
 
   <form method="post">
     {% csrf_token %}
@@ -31,4 +31,18 @@
   {% if player_vote %}
     <p>You are voting: {{ player_vote }}</p>
   {% endif %}
+{% endblock %}
+
+{% block game_handle_new_status %}
+        if(oldStatus.game_phase == newStatus.game_phase
+              && oldStatus.round_num == newStatus.round_num
+              && oldStatus.vote_num == newStatus.vote_num
+              && oldStatus.player_vote == newStatus.player_vote) {
+            $("#missing-votes").text(newStatus.missing_votes_count == 1
+                ? "1 person"
+                : (newStatus.missing_votes_count + " people"));
+            return true;
+        } else {
+            return false;
+        }
 {% endblock %}

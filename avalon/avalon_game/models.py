@@ -40,6 +40,19 @@ class Game(models.Model):
             self.access_code = access_code
         super(Game, self).save(*args, **kwargs)
 
+    _game_phase_strings = {
+        GAME_PHASE_LOBBY: 'lobby',
+        GAME_PHASE_ROLE: 'role',
+        GAME_PHASE_PICK: 'pick',
+        GAME_PHASE_VOTE: 'vote',
+        GAME_PHASE_MISSION: 'mission',
+        GAME_PHASE_ASSASSIN: 'assassin',
+        GAME_PHASE_END: 'end',
+    }
+    def game_phase_string(self):
+        return Game._game_phase_strings[self.game_phase]
+
+
 class Player(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE, db_index=True)
     SECRET_ID_LENGTH = 8

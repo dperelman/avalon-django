@@ -5,7 +5,25 @@
 {% block game_content %}{% endblock %}
 {% block game_refresh %}
     <div class="button-container">
-      <a href="{% url 'game' access_code=access_code player_secret=player_secret %}" class="button">Refresh</a>
+      <a href="{% url 'game' access_code=access_code player_secret=player_secret %}" class="button" id="button-refresh">Refresh</a>
     </div>
+    <script>
+      var status = "{{ status|escapejs }}";
+      var statusObj = JSON.parse(status);
+      function handleNewStatus(oldStatus, newStatus) {
+        {% block game_handle_new_status %}
+        return false;
+        {% endblock %}
+      }
+      setInterval(function() {
+        $.get("{% url 'status' access_code=access_code player_secret=player_secret %}", function(data, textStatus, jqXHR) {
+          if(jqXHR.responseText != status) {
+            if(!handleNewStatus(statusObj, JSON.parse(data))) {
+              document.getElementById("button-refresh").click();
+            }
+          }
+        });
+      }, 5000);
+    </script>
 {% endblock %}
 {% endblock %}

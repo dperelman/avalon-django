@@ -19,7 +19,7 @@
     {% if player in chosen %}
       <p>You have been chosen!</p>
     {% else %}
-      <p>Please wait while your leader, {{ leader.name }}, chooses a team.</p>
+      <p>Please wait while your leader, {{ leader.name }}, chooses a team of {{ team_size }} players for mission {{ round_num }}.</p>
     {% endif %}
   </div>
 {% endblock %}
