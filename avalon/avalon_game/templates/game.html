@@ -3,7 +3,9 @@
 {% block content %}
 {% block game_header %}{% endblock %}
 {% block game_content %}{% endblock %}
+{% block game_refresh %}
     <div class="button-container">
       <a href="{% url 'game' access_code=access_code player_secret=player_secret %}" class="button">Refresh</a>
     </div>
+{% endblock %}
 {% endblock %}

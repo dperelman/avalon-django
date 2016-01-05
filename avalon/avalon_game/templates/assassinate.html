@@ -1,0 +1,23 @@
+{% extends "in_game.html" %}
+
+{% block game_content %}
+  <div class="assassin-phase">
+    <h2>Assassin Phase</h2>
+
+    <p>
+      Correctly guess the identity of Merlin to win the game:
+    </p>
+    <ul>
+      {% for p in targets %}
+      <li class="player">
+        <form method="post" action="{% url 'assassinate' access_code=access_code player_secret=player_secret target=p.order %}">
+          {% csrf_token %}
+          <div class="button-container">
+            <button type="submit">{{ p.name }}</button>
+          </div>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endblock %}

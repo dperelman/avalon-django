@@ -9,7 +9,8 @@ from django.views.decorators.http import require_safe,\
 
 from .forms import NewGameForm, JoinGameForm, StartGameForm
 from .helpers import mission_size, mission_size_string
-from .models import Game, GameRound, Player, PlayerVote, VoteRound
+from .models import Game, GameRound, MissionAction,\
+                    Player, PlayerVote, VoteRound
 
 # helpers to interpret arguments
 def lookup_access_code(func):
@@ -92,9 +93,9 @@ def game_base_context(game, player):
     try:
         round_scores = {}
         for round_num in range(1, 6):
-            round_scores[round_num] = {'mission_size': mission_size_string(mission_size(num_players=num_players, round_num=round_num)), 'winner': ''}
+            round_scores[round_num] = {'mission_size': mission_size_string(mission_size(num_players=num_players, round_num=round_num)), 'result': ''}
         for game_round in GameRound.objects.filter(game=game):
-            round_scores[game_round.round_num]['winner'] = game_round.winner_string()
+            round_scores[game_round.round_num]['result'] = game_round.result_string()
         context['round_scores'] = round_scores
     except ValueError:
         pass
@@ -164,17 +165,34 @@ def game(request, game, player):
         context['round_num'] = vote_round.game_round.round_num
         context['vote_num'] = vote_round.vote_num
         if player in chosen:
+            game_round = vote_round.game_round
+            mission_action = MissionAction.objects\
+                                          .filter(game_round=game_round,
+                                                  player=player)
+            if mission_action:
+                if mission_action.get().played_success:
+                    context['mission_action'] = 'Pass'
+                else:
+                    context['mission_action'] = 'Fail'
             return render(request, 'mission.html', context)
         else:
             return render(request, 'mission_wait.html', context)
     elif game.game_phase == Game.GAME_PHASE_ASSASSIN:
-        pass
+        if player.is_assassin():
+            context['targets'] = [p for p in context['players']
+                                  if p != player and not player.sees_as_spy(p)]
+            return render(request, 'assassinate.html', context)
+        else:
+            return render(request, 'assassinate_wait.html', context)
     elif game.game_phase == Game.GAME_PHASE_END:
-        pass
-    else:
-        pass
+        res_wins = GameRound.objects.filter(game=game, mission_passed=True)\
+                                    .count()
+        res_won = res_wins == 3 and not game.player_assassinated.is_merlin
+        context['resistance_won'] = res_won
 
-    return render(request, 'in_game.html', context)
+        if game.player_assassinated:
+            context['player_assassinated'] = game.player_assassinated
+        return render(request, 'end.html', context)
 
 @lookup_access_code
 @lookup_player_secret
@@ -390,14 +408,10 @@ def vote(request, game, player, round_num, vote_num, vote):
                         game.game_phase = Game.GAME_PHASE_END
                     else:
                         game.game_phase = Game.GAME_PHASE_PICK
-                        new_leader_order = (vote_round.leader.order + 1)\
-                                            % num_players
-                        new_leader = Player.objects.get(game=game,
-                                                        order=new_leader_order)
                         VoteRound.objects\
                                  .create(game_round=vote_round.game_round,
                                          vote_num=vote_round.vote_num+1,
-                                         leader=new_leader)
+                                         leader=vote_round.next_leader())
                 game.save()
 
     return redirect('game', access_code=game.access_code,
@@ -405,12 +419,72 @@ def vote(request, game, player, round_num, vote_num, vote):
 
 @lookup_access_code
 @lookup_player_secret
+@require_POST
 def mission(request, game, player, round_num, mission_action):
     round_num = int(round_num)
 
-    pass
+    player.save()
+
+    if game.game_phase == Game.GAME_PHASE_MISSION:
+        vote_round = VoteRound.objects.get_current_vote_round(game=game)
+        game_round = vote_round.game_round
+        if vote_round.vote_status == VoteRound.VOTE_STATUS_VOTED\
+                and game_round.round_num == round_num\
+                and player in vote_round.chosen.all():
+            passed = mission_action == "success" or not player.is_spy()
+            MissionAction.objects\
+                         .update_or_create(defaults={'played_success': passed},
+                                           game_round=game_round,
+                                           player=player)
+            num_on_mission = game_round.num_players_on_mission()
+            if MissionAction.objects.filter(game_round=game_round).count()\
+                    == num_on_mission:
+                num_fails_required = game_round.num_fails_required()
+                fails = MissionAction.objects\
+                                     .filter(game_round=game_round,
+                                             played_success=False)\
+                                     .count()
+                game_round.mission_passed = fails < num_fails_required
+                game_round.save()
+                res_wins = GameRound.objects.filter(game=game, mission_passed=True).count()
+                spy_wins = GameRound.objects.filter(game=game, mission_passed=False).count()
+                if res_wins == 3:
+                    # resistance wins... except for assassin
+                    game.game_phase = Game.GAME_PHASE_ASSASSIN
+                    game.save()
+                elif spy_wins == 3:
+                    # spies win
+                    game.game_phase = Game.GAME_PHASE_END
+                    game.save()
+                else:
+                    # another round
+                    game.game_phase = Game.GAME_PHASE_PICK
+                    game.save()
+                    next_round_num = game_round.round_num+1
+                    game_round = GameRound.objects\
+                                          .create(game=game,
+                                                  round_num=next_round_num)
+                    next_leader = vote_round.next_leader()
+                    vote_round = VoteRound.objects\
+                                          .create(game_round=game_round,
+                                                  vote_num=1,
+                                                  leader=next_leader)
+
+    return redirect('game', access_code=game.access_code,
+                    player_secret=player.secret_id)
 
 @lookup_access_code
 @lookup_player_secret
+@require_POST
 def assassinate(request, game, player, target):
-    pass
+    player.save()
+
+    if game.game_phase == Game.GAME_PHASE_ASSASSIN\
+            and player.is_assassin():
+        target_player = Player.objects.get(game=game, order=target)
+        game.player_assassinated = target_player
+        game.game_phase = Game.GAME_PHASE_END
+        game.save()
+
+    return redirect('game', access_code=game.access_code,
+                    player_secret=player.secret_id)

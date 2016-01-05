@@ -1,0 +1,31 @@
+{% extends "in_game.html" %}
+
+{% block game_content %}
+<div class="gameOver">
+  <h2>{% if resistance_won %}Resistance{% else %}Spies{% endif %} Won!</h2>
+
+  {% if player_assassinated %}
+  <p>
+  The assassin targetted {{ player_assassinated.name }} who was{% if not player_assassinated.is_merlin %} not{% endif %} Merlin.
+  </p>
+  {% endif %}
+
+  <p>
+    Player roles:
+    <table>
+      <tr>
+        <th>Name</th>
+        <th>Role</th>
+      </tr>
+      {% for p in players %}
+      <tr>
+        <td><span class="{{ p.team }}">{{ p.name }}</span></td>
+        <td><span class="{{ p.team }}">{{ p.role_string }}</span></td>
+      </tr>
+      {% endfor %}
+    </table>
+  </p>
+</div>
+{% endblock %}
+
+{% block game_refresh %}{% endblock %}

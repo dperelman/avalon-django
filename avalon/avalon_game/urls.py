@@ -21,7 +21,7 @@ urlpatterns = [
                 url(r'^retract_team/$', views.retract_team, name='retract_team'),
             ])),
             url(r'^mission/(?P<round_num>[1-5])/(?P<mission_action>(success|fail))/$', views.mission, name='mission'),
-            url(r'^assassinate/(?P<target>[0-9])/$', views.choose, name='choose'),
+            url(r'^assassinate/(?P<target>[0-9])/$', views.assassinate, name='assassinate'),
         ])),
     ])),
 ]

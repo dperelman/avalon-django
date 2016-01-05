@@ -9,7 +9,9 @@
       {% if player.is_spy and not player.is_oberon %}
       <p>Other spies:
         {% for spy in visible_spies %}
+        {% if spy != player %}
         <b class="spy">{{ spy.name }} </b>
+        {% endif %}
         {% endfor %}
       </p>
       {% endif %}

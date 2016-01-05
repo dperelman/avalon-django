@@ -1,0 +1,25 @@
+{% extends "in_game.html" %}
+
+{% block game_content %}
+  <div class="mission-phase">
+    <h2>Mission Phase</h2>
+
+    <p>
+      The vote has passed. You have been chosen to go on the mission.
+    </p>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="button-container">
+        <button type="submit" formaction="{% url 'mission' access_code=access_code player_secret=player_secret round_num=round_num mission_action='success' %}" class="button-pass">Pass</button>
+        <button type="submit" formaction="{% url 'mission' access_code=access_code player_secret=player_secret round_num=round_num mission_action='fail' %}" class="button-fail">Fail</button>
+      </div>
+    </form>
+
+    {% if mission_action %}
+      <p>
+        You are submitting: {{ mission_action }}
+      </p>
+    {% endif %}
+  </div>
+{% endblock %}

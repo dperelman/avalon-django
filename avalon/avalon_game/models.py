@@ -7,7 +7,7 @@ import string
 from django.db import models
 from django.utils import timezone
 
-from .helpers import mission_size
+from .helpers import mission_size, mission_size_string
 
 def generate_code(length):
     return "".join([random.choice(string.ascii_lowercase)
@@ -165,21 +165,33 @@ class GameRound(models.Model):
         else:
             return 'spy'
 
-    def num_players_on_mission(self):
+    def result_string(self):
+        if self.mission_passed is None:
+            return ''
+        elif self.mission_passed:
+            return 'pass'
+        else:
+            return 'fail'
+
+    def mission_size_tuple(self):
         num_players = Player.objects.filter(game=self.game).count()
         return mission_size(num_players=num_players,
-                            round_num=self.round_num)[0]
+                            round_num=self.round_num)
+
+    def mission_size_string(self):
+        return mission_size_string(self.mission_size_tuple())
+
+    def num_players_on_mission(self):
+        return self.mission_size_tuple()[0]
 
     def num_fails_required(self):
-        num_players = Player.objects.filter(game=self.game).count()
-        return mission_size(num_players=num_players,
-                            round_num=self.round_num)[1]
+        return self.mission_size_tuple()[1]
 
 class MissionAction(models.Model):
     game_round = models.ForeignKey(GameRound, on_delete=models.CASCADE, db_index=True)
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     unique_together = (("game", "player"),)
-    played_success = models.NullBooleanField()
+    played_success = models.BooleanField()
 
 class VoteRoundManager(models.Manager):
     def get_current_vote_round(self, game=None, game_round=None):
@@ -208,6 +220,14 @@ class VoteRound(models.Model):
 
     def is_final_vote(self):
         return self.vote_num == 5
+
+    def next_leader(self):
+        game = self.game_round.game
+        num_players = Player.objects.filter(game=game).count()
+        next_leader_order = (self.leader.order + 1) % num_players
+        next_leader = Player.objects.get(game=game,
+                                         order=next_leader_order)
+        return next_leader
 
 class PlayerVote(models.Model):
     vote_round = models.ForeignKey(VoteRound, on_delete=models.CASCADE, db_index=True)
