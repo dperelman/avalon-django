@@ -207,6 +207,12 @@ class GameRound(models.Model):
     def num_fails_required(self):
         return self.mission_size_tuple()[1]
 
+    def num_fails(self):
+        if self.mission_passed is None:
+            return None
+        else:
+            return self.missionaction_set.filter(played_success=False).count()
+
 class MissionAction(models.Model):
     game_round = models.ForeignKey(GameRound, on_delete=models.CASCADE, db_index=True)
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
@@ -234,6 +240,18 @@ class VoteRound(models.Model):
     voted = models.DateTimeField(null=True, default=None)
 
     objects = VoteRoundManager()
+
+    def is_team_finalized(self):
+        return self.vote_status != VoteRound.VOTE_STATUS_WAITING
+
+    def is_waiting_on_leader(self):
+        return self.vote_status == VoteRound.VOTE_STATUS_WAITING
+
+    def is_currently_voting(self):
+        return self.vote_status == VoteRound.VOTE_STATUS_VOTING
+
+    def is_voting_complete(self):
+        return self.vote_status == VoteRound.VOTE_STATUS_VOTED
 
     def is_first_vote(self):
         return self.vote_num == 1

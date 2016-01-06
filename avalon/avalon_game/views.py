@@ -100,11 +100,12 @@ def game_status_string(game, player):
         vote_round = VoteRound.objects.get_current_vote_round(game)
         game_status_object['round_num'] = vote_round.game_round.round_num
         game_status_object['vote_num'] = vote_round.vote_num
-    if game.game_phase == Game.GAME_PHASE_PICK:
+    if game.game_phase == Game.GAME_PHASE_PICK\
+            or game.game_phase == Game.GAME_PHASE_VOTE:
         chosen = vote_round.chosen.order_by('order').all()
         game_status_object['chosen'] = [p.name for p in chosen]
         game_status_object['you_chosen'] = player in chosen
-    elif game.game_phase == Game.GAME_PHASE_VOTE:
+    if game.game_phase == Game.GAME_PHASE_VOTE:
         votes_cast = PlayerVote.objects.filter(vote_round=vote_round).count()
         game_status_object['missing_votes_count'] = num_players - votes_cast
         player_vote = PlayerVote.objects.filter(vote_round=vote_round,
@@ -141,6 +142,10 @@ def game_base_context(game, player):
     context['players'] = players
     context['player'] = player
     context['num_players'] = num_players
+    context['game_rounds'] = game.gameround_set.all().order_by('round_num')
+
+    if game.display_history is not None:
+        context['display_history'] = game.display_history
 
     try:
         round_scores = {}
@@ -237,6 +242,7 @@ def game(request, game, player):
         else:
             return render(request, 'assassinate_wait.html', context)
     elif game.game_phase == Game.GAME_PHASE_END:
+        context['game_over'] = True
         res_wins = GameRound.objects.filter(game=game, mission_passed=True)\
                                     .count()
         res_won = res_wins == 3 and not game.player_assassinated.is_merlin

@@ -249,9 +249,15 @@ li.player, li.player form {
   padding: 0;
 }
 
+#role-reveal {
+  margin: auto;
+}
+
 #history {
+  margin: auto;
   empty-cells: show;
   background: purple;
+  border-collapse: separate;
 }
 
 #history thead th {
@@ -273,6 +279,9 @@ li.player, li.player form {
 }
 #history tbody {
   background: purple;
+}
+#history tbody tr.summary td {
+  border-bottom: solid white 1em;
 }
 #history tbody td {
   text-align: center;
@@ -323,10 +332,17 @@ li.player, li.player form {
   background: #6666ff;
 }
 #history tbody tr.summary.fail {
-  background: red;
+  background: #dd5555;
 }
 #history tbody tr.summary.pass {
-  background: blue;
+  background: #5555ff;
+}
+#history tbody tr.assassin-round {
+  background: #dd5555;
+}
+#history tbody tr.assassin-round td.assassinated:before {
+  color: black;
+  content: "\2620";
 }
 #history tbody td {
   border: solid #e1e1e1 1px;

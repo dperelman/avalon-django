@@ -56,4 +56,67 @@
 {% endblock %}
 
 {% block history %}
+{{ debug }}
+{% if display_history %}
+<table id="history">
+  <thead>
+    <tr>
+      {% for p in players %}
+      <th><p><span{% if game_over %} class="{{ p.team }}"{% endif %}>{{ p.name }}</span></p></th>
+      {% endfor %}
+    </tr>
+    {% if game_over %}
+      {% for p in players %}
+      <th><p><span{% if game_over %} class="{{ p.team }}"{% endif %}>{{ p.role_string }}</span></p></th>
+      {% endfor %}
+    {% endif %}
+  </thead>
+  {% for game_round in game_rounds %}
+  <tbody>
+    {% for vote_round in game_round.voteround_set.all|dictsort:'vote_num' %}
+    <tr class="{% if forloop.revcounter0 > 0 %}reject
+      {% elif game_round.mission_passed != None %}{{ game_round.result_string }}
+      {% elif vote_round.is_waiting_on_leader %}pending
+      {% elif vote_round.is_currently_voting %}voting
+      {% elif vote_round.is_voting_complete %}{% if game_over %}reject{% else %}accept-pending{% endif %}
+      {% endif %}">
+      {% if vote_round.is_voting_complete %}
+      {% for pv in vote_round.playervote_set.all|dictsort:'player.order' %}
+      <td class="{% if pv.player == vote_round.leader %}leader{% endif %} {% if pv.player in vote_round.chosen.all %}chosen{% endif %} {% if pv.accept %}accept{% else %}reject{% endif %}"></td>
+      {% endfor %}
+      {% else %}
+      {% for p in players %}
+      <td class="{% if p == vote_round.leader %}leader{% endif %} {% if vote_round.is_team_finalized and p in vote_round.chosen.all %}chosen{% endif %}"></td>
+      {% endfor %}
+      {% endif %}
+    </tr>
+    {% endfor %}
+    {% if game_round.mission_passed != None %}
+    <tr class="summary {{ game_round.result_string }}">
+      <td colspan="{{ num_players }}">
+        Mission {{ game_round.round_num }} {{ game_round.result_string }}ed
+        with {{ game_round.num_fails }} failures
+      </td>
+    </tr>
+    {% elif game_over %}
+    <tr class="summary fail">
+      <td colspan="{{ num_players }}">
+        Mission {{ game_round.round_num }} failed as the resistance was unable
+        to choose a team 5 times in a row
+      </td>
+    </tr>
+    {% endif %}
+  </tbody>
+  {% endfor %}
+  {% if player_assassinated %}
+  <tbody>
+    <tr class="assassin-round">
+      {% for p in players %}
+      <td{% if p == player_assassinated %} class="assassinated"{% endif %}></td>
+      {% endfor %}
+    </tr>
+  </tbody>
+  {% endif %}
+</table>
+{% endif %}
 {% endblock %}
