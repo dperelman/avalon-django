@@ -58,3 +58,6 @@ target/
 
 # sqlite database
 avalon/db.sqlite3
+
+avalon/avalon/local_settings.py
+avalon/avalon_game/migrations
