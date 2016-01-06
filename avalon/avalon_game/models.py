@@ -28,6 +28,8 @@ class Game(models.Model):
     display_history = models.NullBooleanField()
     player_assassinated = models.ForeignKey('Player', null=True, default=None,
                                             related_name='+')
+    created = models.DateTimeField()
+    ended = models.DateTimeField(null=True, default=None)
 
     # from http://stackoverflow.com/a/11821832
     def save(self, *args, **kwargs):
@@ -38,6 +40,9 @@ class Game(models.Model):
             while Game.objects.filter(access_code=access_code).exists():
                 access_code = generate_code(Game.ACCESS_CODE_LENGTH)
             self.access_code = access_code
+            self.created = timezone.now()
+        if self.ended is None and self.game_phase == Game.GAME_PHASE_END:
+            self.ended = timezone.now()
         super(Game, self).save(*args, **kwargs)
 
     _game_phase_strings = {
@@ -69,6 +74,7 @@ class Player(models.Model):
     role = models.IntegerField(null=True, default=None)
     order = models.IntegerField(null=True, default=None)
     ready = models.BooleanField(default=False)
+    joined = models.DateTimeField()
     last_accessed = models.DateTimeField()
     # names are unique in a game
     unique_together = (("game", "name"), ("game", "secret_id"))
@@ -89,6 +95,7 @@ class Player(models.Model):
         # object is being created, thus no primary key field yet
         if not self.pk:
             self.change_secret_id()
+            self.joined = timezone.now()
         self.last_accessed = timezone.now()
         super(Player, self).save(*args, **kwargs)
 
@@ -222,6 +229,9 @@ class VoteRound(models.Model):
     vote_status = models.IntegerField(default=VOTE_STATUS_WAITING)
     leader = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='vote_round_leader')
     chosen = models.ManyToManyField(Player, related_name='vote_round_chosen')
+    started = models.DateTimeField()
+    chose_team = models.DateTimeField(null=True, default=None)
+    voted = models.DateTimeField(null=True, default=None)
 
     objects = VoteRoundManager()
 
@@ -241,6 +251,17 @@ class VoteRound(models.Model):
         next_leader = Player.objects.get(game=game,
                                          order=next_leader_order)
         return next_leader
+
+    def save(self, *args, **kwargs):
+        # object is being created, thus no primary key field yet
+        if not self.pk:
+            # Make sure access_code is unique before using it.
+            self.started = timezone.now()
+        if self.vote_status == VoteRound.VOTE_STATUS_VOTING:
+            self.chose_team = timezone.now()
+        elif self.vote_status == VoteRound.VOTE_STATUS_VOTED:
+            self.voted = timezone.now()
+        super(VoteRound, self).save(*args, **kwargs)
 
 class PlayerVote(models.Model):
     vote_round = models.ForeignKey(VoteRound, on_delete=models.CASCADE, db_index=True)
