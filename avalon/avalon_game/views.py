@@ -85,7 +85,8 @@ def game_status_string(game, player):
 
     game_status_object['game_phase'] = game.game_phase_string()
 
-    players = Player.objects.filter(game=game)
+    players = Player.objects.filter(game=game)\
+                            .order_by('order', 'joined', 'name')
     num_players = players.count()
 
     if game.game_phase == Game.GAME_PHASE_LOBBY:
@@ -126,7 +127,8 @@ def status(request, game, player):
     return HttpResponse(game_status_string(game, player))
 
 def game_base_context(game, player):
-    players = Player.objects.filter(game=game).order_by('order')
+    players = Player.objects.filter(game=game)\
+                            .order_by('order', 'joined', 'name')
     num_players = players.count()
 
     context = {}

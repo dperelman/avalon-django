@@ -16,7 +16,7 @@
           </div>
         </div>
       </div>
-      <ul>
+      <ul id="players-in-lobby">
         {% for player in players %}
           <li>{{ player.name }}</li>
         {% endfor %}
@@ -28,4 +28,23 @@
       </div>
     </form>
   </div>
+{% endblock %}
+
+{% block game_handle_new_status %}
+        if(oldStatus.game_phase == newStatus.game_phase) {
+            if(JSON.stringify(oldStatus.players)
+                    != JSON.stringify(newStatus.players)) {
+                lobby_list = document.getElementById('players-in-lobby');
+                $(lobby_list).empty();
+                newStatus.players.forEach(function(name) {
+                    var el = document.createElement('li');
+                    el.innerText = name;
+                    lobby_list.appendChild(el);
+                });
+                statusObj.players = newStatus.players;
+            }
+            return true;
+        } else {
+            return false;
+        }
 {% endblock %}
