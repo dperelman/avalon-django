@@ -10,16 +10,43 @@
     {% endif %}
     This will be vote #{{ vote_num }} of 5 for this mission.
 
-    {% if chosen %}
-      <p>Your leader, <b class="role">{{ leader.name }}</b>, is choosing {{ team_size }} players for mission {{ round_num }}: </p>
+    <p>Your leader, <b class="role">{{ leader.name }}</b>, is choosing {{ team_size }} players for mission {{ round_num }}: </p>
+    <ul id="chosen-for-mission">
       {% for chosen_player in chosen %}
       <li>{{ chosen_player.name }}</li>
       {% endfor %}
-    {% endif %}
+    </ul>
+    <p id="you-chosen">
     {% if player in chosen %}
-      <p>You have been chosen!</p>
-    {% else %}
-      <p>Please wait while your leader, {{ leader.name }}, chooses a team of {{ team_size }} players for mission {{ round_num }}.</p>
+      You have been chosen!
     {% endif %}
+    </p>
   </div>
+{% endblock %}
+
+{% block game_handle_new_status %}
+        if(oldStatus.game_phase == newStatus.game_phase
+                && oldStatus.round_num == newStatus.round_num
+                && oldStatus.vote_num == newStatus.vote_num) {
+            if(JSON.stringify(oldStatus.chosen)
+                    != JSON.stringify(newStatus.chosen)) {
+                chosen_list = document.getElementById('chosen-for-mission');
+                $(chosen_list).empty();
+                newStatus.chosen.forEach(function(name) {
+                    var el = document.createElement('li');
+                    el.innerText = name;
+                    chosen_list.appendChild(el);
+                });
+                statusObj.chosen = newStatus.chosen;
+            }
+            if(statusObj.you_chosen != newStatus.you_chosen) {
+                $('#you-chosen').text(newStatus.you_chosen
+                                        ? "You have been chosen!"
+                                        : "");
+                statusObj.you_chosen = newStatus.you_chosen;
+            }
+            return true;
+        } else {
+            return false;
+        }
 {% endblock %}

@@ -103,6 +103,7 @@ def game_status_string(game, player):
     if game.game_phase == Game.GAME_PHASE_PICK:
         chosen = vote_round.chosen.order_by('order').all()
         game_status_object['chosen'] = [p.name for p in chosen]
+        game_status_object['you_chosen'] = player in chosen
     elif game.game_phase == Game.GAME_PHASE_VOTE:
         votes_cast = PlayerVote.objects.filter(vote_round=vote_round).count()
         game_status_object['missing_votes_count'] = num_players - votes_cast

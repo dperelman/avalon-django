@@ -8,8 +8,7 @@
       <a href="{% url 'game' access_code=access_code player_secret=player_secret %}" class="button" id="button-refresh">Refresh</a>
     </div>
     <script>
-      var status = "{{ status|escapejs }}";
-      var statusObj = JSON.parse(status);
+      var statusObj = JSON.parse("{{ status|escapejs }}");
       function handleNewStatus(oldStatus, newStatus) {
         {% block game_handle_new_status %}
         return false;
@@ -17,12 +16,12 @@
       }
       setInterval(function() {
         $.get("{% url 'status' access_code=access_code player_secret=player_secret %}", function(data, textStatus, jqXHR) {
-          if(jqXHR.responseText != status) {
-            if(!handleNewStatus(statusObj, JSON.parse(data))) {
+          if(JSON.stringify(data) != JSON.stringify(statusObj)) {
+            if(!handleNewStatus(statusObj, data)) {
               document.getElementById("button-refresh").click();
             }
           }
-        });
+        }, "json");
       }, 5000);
     </script>
 {% endblock %}
