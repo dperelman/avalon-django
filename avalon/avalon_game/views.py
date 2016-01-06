@@ -94,7 +94,8 @@ def game_status_string(game, player):
     elif game.game_phase == Game.GAME_PHASE_ROLE:
         ready_players = Player.objects.filter(game=game, ready=True)\
                                       .order_by('order')
-        game_status_object['ready'] = [p.name for p in ready_players]
+        game_status_object['ready'] = [{'name': p.name, 'order': p.order}
+                                       for p in ready_players]
     else:
         vote_round = VoteRound.objects.get_current_vote_round(game)
         game_status_object['round_num'] = vote_round.game_round.round_num

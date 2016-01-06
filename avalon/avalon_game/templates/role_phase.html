@@ -7,7 +7,9 @@
     <p><b>Ready up!</b></p>
     <ul>
       {% for p in players %}
-        <li class="{% if p.ready %}ready{% endif %}">{{ p.name }}</li>
+      <li id="player-{{ p.order }}" class="{% if p.ready %}ready{% endif %}">
+        {{ p.name }}
+      </li>
       {% endfor %}
     </ul>
     <form method="post" action="{% url 'ready' access_code=access_code player_secret=player_secret %}">
@@ -17,4 +19,19 @@
       </div>
     </form>
   </div>
+{% endblock %}
+
+{% block game_handle_new_status %}
+        if(oldStatus.game_phase == newStatus.game_phase) {
+            if(JSON.stringify(oldStatus.ready)
+                    != JSON.stringify(newStatus.ready)) {
+                newStatus.ready.forEach(function(player) {
+                    $('#player-' + player.order).addClass('ready');
+                });
+                statusObj.ready = newStatus.ready;
+            }
+            return true;
+        } else {
+            return false;
+        }
 {% endblock %}
