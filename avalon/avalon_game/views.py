@@ -169,6 +169,13 @@ def game_base_context(game, player):
 
     return context
 
+def deterministic_random_boolean(seed):
+    r = random.getstate()
+    random.seed(seed)
+    res = random.choice([True, False])
+    random.setstate(r)
+    return res
+
 @lookup_access_code
 @lookup_player_secret
 @require_safe
@@ -200,8 +207,10 @@ def game(request, game, player):
         assert vote_round.vote_status == VoteRound.VOTE_STATUS_VOTING
         context['chosen'] = vote_round.chosen.order_by('order').all()
         context['leader'] = vote_round.leader
-        context['round_num'] = vote_round.game_round.round_num
-        context['vote_num'] = vote_round.vote_num
+        round_num = vote_round.game_round.round_num
+        context['round_num'] = round_num
+        vote_num = vote_round.vote_num
+        context['vote_num'] = vote_num
         player_vote = PlayerVote.objects.filter(vote_round=vote_round,
                                                 player=player)
         if player_vote:
@@ -212,6 +221,9 @@ def game(request, game, player):
         player_votes = PlayerVote.objects.filter(vote_round=vote_round).count()
         num_players = context['num_players']
         context['missing_votes_count'] = num_players - player_votes
+        seed = "%s-%s-%d-%d" % (game.access_code, player.secret_id,
+                                round_num, vote_num)
+        context['swap_buttons'] = deterministic_random_boolean(seed)
         return render(request, 'vote.html', context)
     elif game.game_phase == Game.GAME_PHASE_MISSION:
         vote_round = VoteRound.objects.get_current_vote_round(game=game)
@@ -219,8 +231,10 @@ def game(request, game, player):
         chosen = vote_round.chosen.order_by('order').all()
         context['chosen'] = chosen
         context['leader'] = vote_round.leader
-        context['round_num'] = vote_round.game_round.round_num
-        context['vote_num'] = vote_round.vote_num
+        round_num = vote_round.game_round.round_num
+        context['round_num'] = round_num
+        vote_num = vote_round.vote_num
+        context['vote_num'] = vote_num
         if player in chosen:
             game_round = vote_round.game_round
             mission_action = MissionAction.objects\
@@ -231,6 +245,9 @@ def game(request, game, player):
                     context['mission_action'] = 'Pass'
                 else:
                     context['mission_action'] = 'Fail'
+            seed = "%s-%s-%d-%d" % (game.access_code, player.secret_id,
+                                    round_num, vote_num)
+            context['swap_buttons'] = deterministic_random_boolean(seed)
             return render(request, 'mission.html', context)
         else:
             return render(request, 'mission_wait.html', context)

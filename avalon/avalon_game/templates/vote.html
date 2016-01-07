@@ -1,48 +1,12 @@
-{% extends "in_game.html" %}
+{% extends "vote_base.html" %}
 
-{% block game_content %}
-  <div class="voting-phase">
-    <h2>Voting Phase</h2>
-  </div>
-
-  <p><b>Please vote on the following team:</b></p>
-  <ul>
-    {% for p in chosen %}
-      <li>{{ p.name }}</li>
-    {% endfor %}
-  </ul>
-
-  <p><b>Waiting for <span id="missing-votes">{% if missing_votes_count == 1 %}1 person{% else %}{{ missing_votes_count }} people{% endif %}</span> to vote.</b></p>
-
-  <form method="post">
-    {% csrf_token %}
-    <div class="button-container">
+{% block accept-button %}
+{% block accept-button-2 %}
       <button type="submit" formaction="{% url 'vote' access_code=access_code player_secret=player_secret round_num=round_num vote_num=vote_num vote='approve' %}" class="button-accept">Accept</button>
-      <button type="submit" formaction="{% url 'vote' access_code=access_code player_secret=player_secret round_num=round_num vote_num=vote_num vote='reject' %}" class="button-reject">Reject</button>
-    </div>
-
-  {% if player == leader %}
-  <div class="button-container">
-    <button type="submit" formaction="{% url 'retract_team' access_code=access_code player_secret=player_secret round_num=round_num vote_num=vote_num %}" class="button-cancel">Change team</button>
-  </div>
-  {% endif %}
-  </form>
-
-  {% if player_vote %}
-    <p>You are voting: {{ player_vote }}</p>
-  {% endif %}
 {% endblock %}
-
-{% block game_handle_new_status %}
-        if(oldStatus.game_phase == newStatus.game_phase
-              && oldStatus.round_num == newStatus.round_num
-              && oldStatus.vote_num == newStatus.vote_num
-              && oldStatus.player_vote == newStatus.player_vote) {
-            $("#missing-votes").text(newStatus.missing_votes_count == 1
-                ? "1 person"
-                : (newStatus.missing_votes_count + " people"));
-            return true;
-        } else {
-            return false;
-        }
+{% endblock %}
+{% block reject-button %}
+{% block reject-button-2 %}
+      <button type="submit" formaction="{% url 'vote' access_code=access_code player_secret=player_secret round_num=round_num vote_num=vote_num vote='reject' %}" class="button-reject">Reject</button>
+{% endblock %}
 {% endblock %}
