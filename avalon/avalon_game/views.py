@@ -85,15 +85,13 @@ def game_status_string(game, player):
 
     game_status_object['game_phase'] = game.game_phase_string()
 
-    players = Player.objects.filter(game=game)\
-                            .order_by('order', 'joined', 'name')
+    players = game.player_set.order_by('order', 'joined', 'name')
     num_players = players.count()
 
     if game.game_phase == Game.GAME_PHASE_LOBBY:
         game_status_object['players'] = [p.name for p in players]
     elif game.game_phase == Game.GAME_PHASE_ROLE:
-        ready_players = Player.objects.filter(game=game, ready=True)\
-                                      .order_by('order')
+        ready_players = game.player_set.filter(ready=True).order_by('order')
         game_status_object['ready'] = [{'name': p.name, 'order': p.order}
                                        for p in ready_players]
     else:
@@ -106,10 +104,9 @@ def game_status_string(game, player):
         game_status_object['chosen'] = [p.name for p in chosen]
         game_status_object['you_chosen'] = player in chosen
     if game.game_phase == Game.GAME_PHASE_VOTE:
-        votes_cast = PlayerVote.objects.filter(vote_round=vote_round).count()
+        votes_cast = vote_round.playervote_set.count()
         game_status_object['missing_votes_count'] = num_players - votes_cast
-        player_vote = PlayerVote.objects.filter(vote_round=vote_round,
-                                                player=player)
+        player_vote = vote_round.playervote_set.filter(player=player)
         if player_vote:
             if player_vote.get().accept:
                 game_status_object['player_vote'] = 'accept'
@@ -130,8 +127,7 @@ def status(request, game, player):
     return HttpResponse(game_status_string(game, player))
 
 def game_base_context(game, player):
-    players = Player.objects.filter(game=game)\
-                            .order_by('order', 'joined', 'name')
+    players = game.player_set.order_by('order', 'joined', 'name')
     num_players = players.count()
 
     context = {}
@@ -151,7 +147,7 @@ def game_base_context(game, player):
         round_scores = {}
         for round_num in range(1, 6):
             round_scores[round_num] = {'mission_size': mission_size_string(mission_size(num_players=num_players, round_num=round_num)), 'result': ''}
-        for game_round in GameRound.objects.filter(game=game):
+        for game_round in game.gameround_set.all():
             round_scores[game_round.round_num]['result'] = game_round.result_string()
         context['round_scores'] = round_scores
     except ValueError:
@@ -211,14 +207,13 @@ def game(request, game, player):
         context['round_num'] = round_num
         vote_num = vote_round.vote_num
         context['vote_num'] = vote_num
-        player_vote = PlayerVote.objects.filter(vote_round=vote_round,
-                                                player=player)
+        player_vote = vote_round.playervote_set.filter(player=player)
         if player_vote:
             if player_vote.get().accept:
                 context['player_vote'] = 'accept'
             else:
                 context['player_vote'] = 'reject'
-        player_votes = PlayerVote.objects.filter(vote_round=vote_round).count()
+        player_votes = vote_round.playervote_set.count()
         num_players = context['num_players']
         context['missing_votes_count'] = num_players - player_votes
         seed = "%s-%s-%d-%d" % (game.access_code, player.secret_id,
@@ -237,9 +232,7 @@ def game(request, game, player):
         context['vote_num'] = vote_num
         if player in chosen:
             game_round = vote_round.game_round
-            mission_action = MissionAction.objects\
-                                          .filter(game_round=game_round,
-                                                  player=player)
+            mission_action = game_round.missionaction_set.filter(player=player)
             if mission_action:
                 if mission_action.get().played_success:
                     context['mission_action'] = 'Pass'
@@ -260,9 +253,8 @@ def game(request, game, player):
             return render(request, 'assassinate_wait.html', context)
     elif game.game_phase == Game.GAME_PHASE_END:
         context['game_over'] = True
-        res_wins = GameRound.objects.filter(game=game, mission_passed=True)\
-                                    .count()
-        res_won = res_wins == 3 and not game.player_assassinated.is_merlin
+        res_wins = game.gameround_set.filter(mission_passed=True).count()
+        res_won = res_wins == 3 and not game.player_assassinated.is_merlin()
         context['resistance_won'] = res_won
 
         if game.player_assassinated:
@@ -274,7 +266,7 @@ def game(request, game, player):
 @require_POST
 def leave(request, game, player):
     player.delete()
-    num_players = Player.objects.filter(game=game).count()
+    num_players = game.player_set.count()
     if num_players == 0:
         game.delete()
     return redirect('index')
@@ -289,7 +281,7 @@ def start(request, game, player):
         return redirect('game', access_code=game.access_code,
                         player_secret=player.secret_id)
 
-    players = Player.objects.filter(game=game)
+    players = game.player_set.all()
     num_players = players.count()
 
     form = StartGameForm(request.POST)
@@ -352,7 +344,7 @@ def ready(request, game, player):
         player.ready = True
         player.save()
 
-        if not Player.objects.filter(game=game, ready=False):
+        if not game.player_set.filter(ready=False):
             game.game_phase = Game.GAME_PHASE_PICK
             game.save()
             game_round = GameRound.objects.create(game=game, round_num=1)
@@ -377,7 +369,7 @@ def choose(request, game, player, round_num, vote_num, who):
                 and vote_round.game_round.round_num == round_num\
                 and vote_round.vote_num == vote_num\
                 and vote_round.leader == player:
-            chosen_player = Player.objects.get(game=game, order=who)
+            chosen_player = game.player_set.get(order=who)
             vote_round.chosen.add(chosen_player)
             vote_round.save()
 
@@ -397,7 +389,7 @@ def unchoose(request, game, player, round_num, vote_num, who):
                 and vote_round.game_round.round_num == round_num\
                 and vote_round.vote_num == vote_num\
                 and vote_round.leader == player:
-            chosen_player = Player.objects.get(game=game, order=who)
+            chosen_player = game.player_set.get(order=who)
             vote_round.chosen.remove(chosen_player)
             vote_round.save()
 
@@ -443,7 +435,7 @@ def retract_team(request, game, player, round_num, vote_num):
             vote_round.save()
             game.game_phase = Game.GAME_PHASE_PICK
             game.save()
-            PlayerVote.objects.filter(vote_round=vote_round).delete()
+            vote_round.playervote_set.all().delete()
 
     return redirect('game', access_code=game.access_code,
                     player_secret=player.secret_id)
@@ -461,20 +453,17 @@ def vote(request, game, player, round_num, vote_num, vote):
                 and vote_round.game_round.round_num == round_num\
                 and vote_round.vote_num == vote_num:
             accept = vote == "approve"
-            PlayerVote.objects.update_or_create(defaults={'accept': accept},
-                                                vote_round=vote_round,
-                                                player=player)
-            num_players = Player.objects.filter(game=game).count()
-            if PlayerVote.objects.filter(vote_round=vote_round).count()\
-                    == num_players:
+            vote_round.playervote_set\
+                      .update_or_create(defaults={'accept': accept},
+                                        player=player)
+            num_players = game.player_set.count()
+            if vote_round.playervote_set.count() == num_players:
                 # All players voted, voting round is over.
                 vote_round.vote_status = VoteRound.VOTE_STATUS_VOTED
                 vote_round.save()
-                accepts = PlayerVote.objects.filter(vote_round=vote_round,
-                                                    accept=True)
-                rejects = PlayerVote.objects.filter(vote_round=vote_round,
-                                                    accept=False)
-                if accepts.count() > rejects.count():
+                accepts = vote_round.playervote_set.filter(accept=True).count()
+                rejects = num_players - accepts
+                if accepts > rejects:
                     # Team was approved
                     game.game_phase = Game.GAME_PHASE_MISSION
                 else:
@@ -507,22 +496,20 @@ def mission(request, game, player, round_num, mission_action):
                 and game_round.round_num == round_num\
                 and player in vote_round.chosen.all():
             passed = mission_action == "success" or not player.is_spy()
-            MissionAction.objects\
-                         .update_or_create(defaults={'played_success': passed},
-                                           game_round=game_round,
-                                           player=player)
+            game_round.missionaction_set\
+                      .update_or_create(defaults={'played_success': passed},
+                                        player=player)
             num_on_mission = game_round.num_players_on_mission()
-            if MissionAction.objects.filter(game_round=game_round).count()\
-                    == num_on_mission:
+            if game_round.missionaction_set.count() == num_on_mission:
                 num_fails_required = game_round.num_fails_required()
-                fails = MissionAction.objects\
-                                     .filter(game_round=game_round,
-                                             played_success=False)\
-                                     .count()
+                fails = game_round.missionaction_set\
+                                  .filter(played_success=False).count()
                 game_round.mission_passed = fails < num_fails_required
                 game_round.save()
-                res_wins = GameRound.objects.filter(game=game, mission_passed=True).count()
-                spy_wins = GameRound.objects.filter(game=game, mission_passed=False).count()
+                res_wins = game.gameround_set.filter(mission_passed=True)\
+                                             .count()
+                spy_wins = game.gameround_set.filter(mission_passed=False)\
+                                             .count()
                 if res_wins == 3:
                     # resistance wins... except for assassin
                     game.game_phase = Game.GAME_PHASE_ASSASSIN
@@ -556,7 +543,7 @@ def assassinate(request, game, player, target):
 
     if game.game_phase == Game.GAME_PHASE_ASSASSIN\
             and player.is_assassin():
-        target_player = Player.objects.get(game=game, order=target)
+        target_player = game.player_set.get(order=target)
         game.player_assassinated = target_player
         game.game_phase = Game.GAME_PHASE_END
         game.save()
