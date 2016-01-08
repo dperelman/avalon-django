@@ -57,6 +57,8 @@ class Game(models.Model):
     def game_phase_string(self):
         return Game._game_phase_strings[self.game_phase]
 
+    def num_players(self):
+        return self.player_set.count()
 
 class Player(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE, db_index=True)
@@ -213,6 +215,13 @@ class GameRound(models.Model):
         else:
             return self.missionaction_set.filter(played_success=False).count()
 
+    def played_fail(self):
+        if self.mission_passed is None:
+            return None
+        else:
+            fail_actions = self.missionaction_set.filter(played_success=False)
+            return [action.player for action in fail_actions]
+
 class MissionAction(models.Model):
     game_round = models.ForeignKey(GameRound, on_delete=models.CASCADE, db_index=True)
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
@@ -261,6 +270,15 @@ class VoteRound(models.Model):
 
     def is_final_vote(self):
         return self.vote_num == 5
+
+    def team_approved(self):
+        num_players = self.game_round.game.num_players()
+        if self.playervote_set.count() == num_players:
+            accepts = self.playervote_set.filter(accept=True).count()
+            rejects = num_players - accepts
+            return accepts > rejects
+        else:
+            return None
 
     def next_leader(self):
         game = self.game_round.game

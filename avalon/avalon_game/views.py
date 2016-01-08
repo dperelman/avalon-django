@@ -456,14 +456,12 @@ def vote(request, game, player, round_num, vote_num, vote):
             vote_round.playervote_set\
                       .update_or_create(defaults={'accept': accept},
                                         player=player)
-            num_players = game.player_set.count()
-            if vote_round.playervote_set.count() == num_players:
+            team_approved = vote_round.team_approved()
+            if team_approved is not None:
                 # All players voted, voting round is over.
                 vote_round.vote_status = VoteRound.VOTE_STATUS_VOTED
                 vote_round.save()
-                accepts = vote_round.playervote_set.filter(accept=True).count()
-                rejects = num_players - accepts
-                if accepts > rejects:
+                if team_approved:
                     # Team was approved
                     game.game_phase = Game.GAME_PHASE_MISSION
                 else:

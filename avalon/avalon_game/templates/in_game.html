@@ -82,7 +82,7 @@
       {% endif %}">
       {% if vote_round.is_voting_complete %}
       {% for pv in vote_round.playervote_set.all|dictsort:'player.order' %}
-      <td class="{% if pv.player == vote_round.leader %}leader{% endif %} {% if pv.player in vote_round.chosen.all %}chosen{% endif %} {% if pv.accept %}accept{% else %}reject{% endif %}"></td>
+      <td class="{% if pv.player == vote_round.leader %}leader{% endif %} {% if pv.player in vote_round.chosen.all %}chosen {% if game_over and vote_round.team_approved %}{% if pv.player in game_round.played_fail %}played-fail{% else %}played-success{% endif %}{% endif %}{% endif %} {% if pv.accept %}accept{% else %}reject{% endif %}"></td>
       {% endfor %}
       {% else %}
       {% for p in players %}

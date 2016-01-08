@@ -360,3 +360,9 @@ li.player, li.player form {
 #history tbody td.chosen {
   border: solid black 3px;
 }
+#history tbody td.chosen.played-fail {
+  border: solid #440000 5px;
+}
+#history tbody td.chosen.played-success {
+  border: solid #000044 5px;
+}
