@@ -14,7 +14,7 @@ class JoinGameForm(forms.Form):
         data = self.cleaned_data['game']
 
         try:
-            return Game.objects.get(access_code=data)
+            return Game.objects.get(access_code=data.lower())
         except Game.DoesNotExist:
             raise forms.ValidationError("Invalid access code.")
 

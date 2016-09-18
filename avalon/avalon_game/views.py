@@ -20,7 +20,7 @@ from .models import Game, GameRound, MissionAction,\
 # helpers to interpret arguments
 def lookup_access_code(func):
     def with_game(request, access_code, *args, **kwargs):
-        game = get_object_or_404(Game, access_code=access_code)
+        game = get_object_or_404(Game, access_code=access_code.lower())
         return func(request, game, *args, **kwargs)
 
     return with_game
