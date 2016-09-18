@@ -11,7 +11,7 @@ from .helpers import mission_size, mission_size_string
 
 def generate_code(length):
     return "".join([random.choice(string.ascii_lowercase)
-                    for i in xrange(length)])
+                    for i in range(length)])
 
 class Game(models.Model):
     ACCESS_CODE_LENGTH = 6
