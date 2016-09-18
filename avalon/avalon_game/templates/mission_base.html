@@ -6,6 +6,12 @@
 
     <p>
       The vote has passed. You have been chosen to go on the mission.
+      The following players are on the mission:
+      <ul id="chosen-for-mission">
+        {% for chosen_player in chosen %}
+        <li>{{ chosen_player.name }}</li>
+        {% endfor %}
+      </ul>
     </p>
 
     <form method="post">

@@ -3,6 +3,7 @@
 {% block game_header %}
   <div class="role-info">
     <hr class="small-hr">
+    {% if not is_observer %}
     <div id="role-info">
       <p>Team: <b class="{{ player.team }}">{{ player.team|title }}</b> | Role: {{ player.role_string }}</p>
 
@@ -44,6 +45,7 @@
       Tap to view role info
     </p>
   </div>
+  {% endif %}
 
   <script>
     $(document).ready(function () {

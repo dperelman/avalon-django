@@ -24,8 +24,12 @@
       </ul>
 
       <div class="button-container">
-        <button type="submit" formaction="{% url 'start' access_code=access_code player_secret=player_secret %}" class="button-start">Start</button>
+        <button type="submit" formaction="{% if is_observer %}{% url 'observe_start' access_code=access_code %}{% else %}{% url 'start' access_code=access_code player_secret=player_secret %}{% endif %}" class="button-start">Start</button>
+        {% if is_observer %}
+        <a href="{% url 'index' %}" class="button button-leave">Leave</a>
+        {% else %}
         <button type="submit" formaction="{% url 'leave' access_code=access_code player_secret=player_secret %}" class="button-leave">Leave</button>
+        {% endif %}
       </div>
     </form>
   </div>

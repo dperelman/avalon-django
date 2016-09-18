@@ -14,6 +14,7 @@
 
   <p><b>Waiting for <span id="missing-votes">{% if missing_votes_count == 1 %}1 person{% else %}{{ missing_votes_count }} people{% endif %}</span> to vote.</b></p>
 
+  {% if not is_observer %}
   <form method="post">
     {% csrf_token %}
     <div class="button-container">
@@ -30,6 +31,7 @@
   <div class="button-container">
     <button type="submit" formaction="{% url 'retract_team' access_code=access_code player_secret=player_secret round_num=round_num vote_num=vote_num %}" class="button-cancel">Change team</button>
   </div>
+  {% endif %}
   {% endif %}
 
   {% if player_vote %}

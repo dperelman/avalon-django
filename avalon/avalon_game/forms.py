@@ -23,8 +23,11 @@ class JoinGameForm(forms.Form):
 
         game = cleaned_data.get("game")
         name = cleaned_data.get("player")
+        observer = 'observe' in self.data
+        cleaned_data["observer"] = observer
 
-        if game is None or name is None:
+        if game is None or name is None or observer:
+            cleaned_data["player"] = None
             return
 
         try:
@@ -41,7 +44,7 @@ class JoinGameForm(forms.Form):
                 player = Player.objects.create(game=game, name=name)
                 cleaned_data["player"] = player
             else:
-                self.add_error('player', "That game has already started. If you want to rejoin, please enter your name exactly as you did before.")
+                self.add_error('player', "That game has already started. If you want to rejoin, please enter your name exactly as you did before or select \"Observe\" if you just want to display the game status.")
 
 class StartGameForm(forms.Form):
     display_history = forms.BooleanField(required=False, initial=True,
