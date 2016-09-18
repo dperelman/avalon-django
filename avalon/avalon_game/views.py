@@ -333,7 +333,7 @@ def start(request, game, player):
                     [Player.ROLE_GOOD]*(num_resistance - len(resistance_roles))
             assert len(roles) == num_players
 
-            play_order = range(num_players)
+            play_order = list(range(num_players))
             random.shuffle(play_order)
             random.shuffle(roles)
 
