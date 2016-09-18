@@ -105,6 +105,7 @@ def game_status_string(game, player):
     if game.game_phase == Game.GAME_PHASE_LOBBY:
         game_status_object['players'] = [p.name for p in players]
     elif game.game_phase == Game.GAME_PHASE_ROLE:
+        game_status_object['times_started'] = game.times_started
         ready_players = game.player_set.filter(ready=True).order_by('order')
         game_status_object['ready'] = [{'name': p.name, 'order': p.order}
                                        for p in ready_players]
@@ -198,6 +199,7 @@ def game(request, game, player):
         context['form'] = StartGameForm()
         return render(request, 'lobby.html', context)
     elif game.game_phase == Game.GAME_PHASE_ROLE:
+        context['times_started'] = game.times_started
         return render(request, 'role_phase.html', context)
     elif game.game_phase == Game.GAME_PHASE_PICK:
         vote_round = VoteRound.objects.get_current_vote_round(game=game)
@@ -320,6 +322,7 @@ def start(request, game, player):
         else:
             game.display_history = form.cleaned_data.get('display_history')
             game.game_phase = Game.GAME_PHASE_ROLE
+            game.times_started += 1
 
             resistance_roles = []
             if form.cleaned_data.get('merlin'):
@@ -349,6 +352,20 @@ def start(request, game, player):
     context['form'] = form
 
     return render(request, 'lobby.html', context)
+
+@lookup_access_code
+@lookup_player_secret
+@require_POST
+def cancel_game(request, game, player):
+    if game.game_phase == Game.GAME_PHASE_ROLE:
+        player.ready = False
+        player.save()
+
+        game.game_phase = Game.GAME_PHASE_LOBBY
+        game.save()
+
+    return redirect('game', access_code=game.access_code,
+                    player_secret=player.secret_id)
 
 @lookup_access_code
 @lookup_player_secret
