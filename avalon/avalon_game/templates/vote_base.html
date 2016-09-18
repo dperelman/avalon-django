@@ -31,10 +31,13 @@
     <button type="submit" formaction="{% url 'retract_team' access_code=access_code player_secret=player_secret round_num=round_num vote_num=vote_num %}" class="button-cancel">Change team</button>
   </div>
   {% endif %}
-  </form>
 
   {% if player_vote %}
     <p>You are voting: {{ player_vote }}</p>
+    <div class="button-container">
+      <button type="submit" formaction="{% url 'vote' access_code=access_code player_secret=player_secret round_num=round_num vote_num=vote_num vote='cancel' %}" class="button-cancel-vote">Retract vote</button>
+    </div>
+  </form>
   {% endif %}
 {% endblock %}
 
