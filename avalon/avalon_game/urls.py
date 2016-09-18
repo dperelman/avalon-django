@@ -15,6 +15,7 @@ urlpatterns = [
             url(r'^start/$', views.start, name='start'),
             url(r'^leave/$', views.leave, name='leave'),
             url(r'^ready/$', views.ready, name='ready'),
+            url(r'^cancel_game/$', views.cancel_game, name='cancel_game'),
             url(r'^(?P<round_num>[1-5])/(?P<vote_num>[1-5])/', include([
                 url(r'^vote/(?P<vote>(approve|reject))/$', views.vote, name='vote'),
                 url(r'^choose/(?P<who>[0-9])/$', views.choose, name='choose'),

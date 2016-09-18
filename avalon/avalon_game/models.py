@@ -25,6 +25,7 @@ class Game(models.Model):
     GAME_PHASE_ASSASSIN = 5
     GAME_PHASE_END = 6
     game_phase = models.IntegerField(default=GAME_PHASE_LOBBY)
+    times_started = models.IntegerField(null=False, default=0)
     display_history = models.NullBooleanField()
     player_assassinated = models.ForeignKey('Player', null=True, default=None,
                                             related_name='+')

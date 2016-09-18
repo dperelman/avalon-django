@@ -2,7 +2,9 @@
 
 {% block game_content %}
   <div class="role-phase">
-    <h2>Role Phase</h2>
+    <h2>Role Phase{% if times_started > 1 %}
+      <b>#{{times_started}}</b>
+    {% endif %}</h2>
 
     <p><b>Ready up!</b></p>
     <ul>
@@ -12,17 +14,19 @@
       </li>
       {% endfor %}
     </ul>
-    <form method="post" action="{% url 'ready' access_code=access_code player_secret=player_secret %}">
+    <form method="post">
       {% csrf_token %}
       <div class="button-container">
-        <button type="submit">Ready</button>
+        <button type="submit" formaction="{% url 'ready' access_code=access_code player_secret=player_secret %}">Ready</button>
+        <button type="submit" formaction="{% url 'cancel_game' access_code=access_code player_secret=player_secret %}">Return to Lobby</button>
       </div>
     </form>
   </div>
 {% endblock %}
 
 {% block game_handle_new_status %}
-        if(oldStatus.game_phase == newStatus.game_phase) {
+        if(oldStatus.game_phase == newStatus.game_phase
+            && oldStatus.times_started == newStatus.times_started) {
             if(JSON.stringify(oldStatus.ready)
                     != JSON.stringify(newStatus.ready)) {
                 newStatus.ready.forEach(function(player) {
