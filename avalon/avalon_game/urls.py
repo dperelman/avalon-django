@@ -8,6 +8,7 @@ urlpatterns = [
     url(r'^new/$', views.new_game, name='new_game'),
     url(r'^(?P<access_code>[a-z]{6})/', include([
         url(r'^$', views.join_game, name='join_game'),
+        url(r'^qr/$', views.qr_code, name='qr_code'),
         url(r'(?P<player_secret>[a-z]{8})/', include([
             url(r'^$', views.game, name='game'),
             url(r'^status/$', views.status, name='status'),

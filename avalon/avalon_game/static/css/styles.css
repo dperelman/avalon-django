@@ -215,6 +215,10 @@ li.voter {
   width: 50%;
 }
 
+.lobby-info .qrcode {
+  width: 100%;
+}
+
 .game-options li {
   text-align: left;
   margin: 0;
