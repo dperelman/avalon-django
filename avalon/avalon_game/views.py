@@ -1,6 +1,8 @@
+from io import BytesIO
 import json
 import math
 import random
+import qrcode
 
 from django.db import transaction
 from django.http import HttpResponse
@@ -8,6 +10,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_safe,\
                                          require_POST,\
                                          require_http_methods
+from django.urls import reverse
 
 from .forms import NewGameForm, JoinGameForm, StartGameForm
 from .helpers import mission_size, mission_size_string
@@ -79,6 +82,17 @@ def join_game(request, game):
     form = JoinGameForm(initial={'game': game.access_code})
     return render(request, 'join_game.html', {'access_code': game.access_code,
                                               'form': form})
+
+@lookup_access_code
+@require_safe
+def qr_code(request, game):
+    join_url = reverse('join_game', kwargs={'access_code': game.access_code})
+    join_url = request.build_absolute_uri(join_url)
+    img = qrcode.make(join_url)
+    output = BytesIO()
+    img.save(output, "PNG")
+    return HttpResponse(output.getvalue(), content_type='image/png')
+
 
 def game_status_string(game, player):
     game_status_object = {}

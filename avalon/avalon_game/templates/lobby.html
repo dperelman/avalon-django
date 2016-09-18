@@ -8,6 +8,7 @@
       <div class="lobby-info">
         <div class="access-code">
           <p>Access Code: {{ access_code }}</p>
+          <p><img class = "qrcode" src = "{% url 'qr_code' access_code=access_code %}"></p>
         </div>
         <div class="game-options">
           <p class="options-header">Options</p>
