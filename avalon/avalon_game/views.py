@@ -483,28 +483,34 @@ def vote(request, game, player, round_num, vote_num, vote):
         if vote_round.vote_status == VoteRound.VOTE_STATUS_VOTING\
                 and vote_round.game_round.round_num == round_num\
                 and vote_round.vote_num == vote_num:
-            accept = vote == "approve"
-            vote_round.playervote_set\
-                      .update_or_create(defaults={'accept': accept},
-                                        player=player)
-            team_approved = vote_round.team_approved()
-            if team_approved is not None:
-                # All players voted, voting round is over.
-                vote_round.vote_status = VoteRound.VOTE_STATUS_VOTED
-                vote_round.save()
-                if team_approved:
-                    # Team was approved
-                    game.game_phase = Game.GAME_PHASE_MISSION
-                else:
-                    # Team was rejected
-                    if vote_round.is_final_vote():
-                        game.game_phase = Game.GAME_PHASE_END
+            if vote == "cancel":
+                try:
+                    vote_round.playervote_set.get(player=player).delete()
+                except PlayerVote.DoesNotExist:
+                    pass
+            else:
+                accept = vote == "approve"
+                vote_round.playervote_set\
+                          .update_or_create(defaults={'accept': accept},
+                                            player=player)
+                team_approved = vote_round.team_approved()
+                if team_approved is not None:
+                    # All players voted, voting round is over.
+                    vote_round.vote_status = VoteRound.VOTE_STATUS_VOTED
+                    vote_round.save()
+                    if team_approved:
+                        # Team was approved
+                        game.game_phase = Game.GAME_PHASE_MISSION
                     else:
-                        game.game_phase = Game.GAME_PHASE_PICK
-                        VoteRound.objects\
-                                 .create(game_round=vote_round.game_round,
-                                         vote_num=vote_round.vote_num+1,
-                                         leader=vote_round.next_leader())
+                        # Team was rejected
+                        if vote_round.is_final_vote():
+                            game.game_phase = Game.GAME_PHASE_END
+                        else:
+                            game.game_phase = Game.GAME_PHASE_PICK
+                            VoteRound.objects\
+                                     .create(game_round=vote_round.game_round,
+                                             vote_num=vote_round.vote_num+1,
+                                             leader=vote_round.next_leader())
                 game.save()
 
     return redirect('game', access_code=game.access_code,
