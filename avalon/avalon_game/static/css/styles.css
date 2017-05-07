@@ -47,11 +47,24 @@ h1 {
   margin-right: 1em;
 }
 
+.access-code .header {
+  font-weight: bold;
+  margin-left: 1em;
+}
+.access-code .header::after {
+  font-weight: bold;
+  content: ": ";
+}
+
 li {
   position: relative;
   list-style: none;
   padding: 15px;
   border-bottom: #eee solid 1px;
+}
+
+li.this-player {
+  font-weight: bold;
 }
 
 .button-container {

@@ -18,8 +18,8 @@
         </div>
       </div>
       <ul id="players-in-lobby">
-        {% for player in players %}
-          <li>{{ player.name }}</li>
+        {% for listed_player in players %}
+          <li{% if player == listed_player %} class="this-player"{% endif %}>{{ listed_player.name }}</li>
         {% endfor %}
       </ul>
 
@@ -44,6 +44,9 @@
                 newStatus.players.forEach(function(name) {
                     var el = document.createElement('li');
                     el.innerText = name;
+                    if(name == '{{ player.name }}') {
+                        el.className = 'this-player';
+                    }
                     lobby_list.appendChild(el);
                 });
                 statusObj.players = newStatus.players;

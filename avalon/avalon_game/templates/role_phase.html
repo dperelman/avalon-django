@@ -9,7 +9,7 @@
     <p><b>Ready up!</b></p>
     <ul>
       {% for p in players %}
-      <li id="player-{{ p.order }}" class="{% if p.ready %}ready{% endif %}">
+      <li id="player-{{ p.order }}" class="{% if p.ready %}ready{% endif %}{% if p == player %} this-player{% endif %}">
         {{ p.name }}
       </li>
       {% endfor %}
