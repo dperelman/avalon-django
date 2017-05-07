@@ -69,6 +69,8 @@ def new_game(request):
         if form.is_valid():
             game = Game.objects.create()
             name = form.cleaned_data.get('name')
+            if name is None:
+                return redirect('observe', access_code=game.access_code)
             player = Player.objects.create(game=game, name=name)
             return redirect('game',
                             access_code=game.access_code,

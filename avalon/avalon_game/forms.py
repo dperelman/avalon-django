@@ -16,6 +16,9 @@ class NewGameForm(forms.Form):
         elif not observer and len(name) == 0:
             self.add_error('name', "Player name must be non-empty (did you mean to click 'Create as observer'?).")
 
+        if name is None or observer:
+            cleaned_data["name"] = None
+
 class JoinGameForm(forms.Form):
     game = forms.CharField(label='Access code',
                            max_length=Game.ACCESS_CODE_LENGTH)
