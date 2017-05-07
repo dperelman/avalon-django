@@ -52,6 +52,8 @@ def enter_code(request):
         if form.is_valid():
             game = form.cleaned_data.get('game')
             player = form.cleaned_data.get('player')
+            if player is None:
+                return redirect('observe', access_code=game.access_code)
             return redirect('game',
                             access_code=game.access_code,
                             player_secret=player.secret_id)
@@ -67,6 +69,8 @@ def new_game(request):
         if form.is_valid():
             game = Game.objects.create()
             name = form.cleaned_data.get('name')
+            if name is None:
+                return redirect('observe', access_code=game.access_code)
             player = Player.objects.create(game=game, name=name)
             return redirect('game',
                             access_code=game.access_code,
@@ -93,6 +97,10 @@ def qr_code(request, game):
     img.save(output, "PNG")
     return HttpResponse(output.getvalue(), content_type='image/png')
 
+@lookup_access_code
+@require_safe
+def observe(request, game):
+    return _game(request, game, None)
 
 def game_status_string(game, player):
     game_status_object = {}
@@ -133,6 +141,12 @@ def game_status_string(game, player):
     return json.dumps(game_status_object)
 
 @lookup_access_code
+@require_safe
+@transaction.non_atomic_requests
+def observe_status(request, game):
+    return HttpResponse(game_status_string(game, None))
+
+@lookup_access_code
 @lookup_player_secret
 @require_safe
 @transaction.non_atomic_requests
@@ -149,9 +163,11 @@ def game_base_context(game, player):
 
     context['status'] = game_status_string(game, player)
     context['access_code'] = game.access_code
-    context['player_secret'] = player.secret_id
+    context['is_observer'] = player is None
+    if player is not None:
+        context['player_secret'] = player.secret_id
+        context['player'] = player
     context['players'] = players
-    context['player'] = player
     context['num_players'] = num_players
     context['game_rounds'] = game.gameround_set.all().order_by('round_num')
 
@@ -171,12 +187,15 @@ def game_base_context(game, player):
     if game.game_phase != Game.GAME_PHASE_LOBBY:
         context['game_has_mordred'] = players.filter(role=Player.ROLE_MORDRED)\
                                              .exists()
-        context['visible_spies'] = [p for p in players
-                                    if player.sees_as_spy(p)]
-        if player.is_percival():
-            possible_merlins = " or ".join([p.name for p in players
-                                            if p.appears_as_merlin()])
-            context['possible_merlins'] = possible_merlins
+        if player is None:
+            context['visible_spies'] = []
+        else:
+            context['visible_spies'] = [p for p in players
+                                        if player.sees_as_spy(p)]
+            if player.is_percival():
+                possible_merlins = " or ".join([p.name for p in players
+                                                if p.appears_as_merlin()])
+                context['possible_merlins'] = possible_merlins
 
     return context
 
@@ -193,6 +212,9 @@ def deterministic_random_boolean(seed):
 def game(request, game, player):
     player.save() # update last_accessed
 
+    return _game(request, game, player)
+
+def _game(request, game, player):
     context = game_base_context(game, player)
 
     if game.game_phase == Game.GAME_PHASE_LOBBY:
@@ -232,9 +254,10 @@ def game(request, game, player):
         player_votes = vote_round.playervote_set.count()
         num_players = context['num_players']
         context['missing_votes_count'] = num_players - player_votes
-        seed = "%s-%s-%d-%d" % (game.access_code, player.secret_id,
-                                round_num, vote_num)
-        context['swap_buttons'] = deterministic_random_boolean(seed)
+        if player is not None:
+            seed = "%s-%s-%d-%d" % (game.access_code, player.secret_id,
+                                    round_num, vote_num)
+            context['swap_buttons'] = deterministic_random_boolean(seed)
         return render(request, 'vote.html', context)
     elif game.game_phase == Game.GAME_PHASE_MISSION:
         vote_round = VoteRound.objects.get_current_vote_round(game=game)
@@ -261,7 +284,7 @@ def game(request, game, player):
         else:
             return render(request, 'mission_wait.html', context)
     elif game.game_phase == Game.GAME_PHASE_ASSASSIN:
-        if player.is_assassin():
+        if player is not None and player.is_assassin():
             context['targets'] = [p for p in context['players']
                                   if p != player and not player.sees_as_spy(p)]
             return render(request, 'assassinate.html', context)
@@ -288,14 +311,25 @@ def leave(request, game, player):
     return redirect('index')
 
 @lookup_access_code
+@require_POST
+def observe_start(request, game):
+    return _start(request, game, None)
+
+@lookup_access_code
 @lookup_player_secret
 @require_POST
 def start(request, game, player):
     player.save() # update last_accessed
 
+    return _start(request, game, player)
+
+def _start(request, game, player):
     if game.game_phase != Game.GAME_PHASE_LOBBY:
-        return redirect('game', access_code=game.access_code,
-                        player_secret=player.secret_id)
+        if player is None:
+            return redirect('observe', access_code=game.access_code)
+        else:
+            return redirect('game', access_code=game.access_code,
+                            player_secret=player.secret_id)
 
     players = game.player_set.all()
     num_players = players.count()
@@ -346,12 +380,24 @@ def start(request, game, player):
                 p.save()
 
             game.save()
-            return redirect('game', access_code=game.access_code,
-                            player_secret=player.secret_id)
+            if player is None:
+                return redirect('observe', access_code=game.access_code)
+            else:
+                return redirect('game', access_code=game.access_code,
+                                player_secret=player.secret_id)
     context = game_base_context(game, player)
     context['form'] = form
 
     return render(request, 'lobby.html', context)
+
+@lookup_access_code
+@require_POST
+def observe_cancel_game(request, game):
+    if game.game_phase == Game.GAME_PHASE_ROLE:
+        game.game_phase = Game.GAME_PHASE_LOBBY
+        game.save()
+
+    return redirect('observe', access_code=game.access_code)
 
 @lookup_access_code
 @lookup_player_secret

@@ -5,7 +5,16 @@
     <h2>Mission Phase</h2>
 
     <p>
-      The vote has passed. You have not been selected. Please wait.
+      The vote has passed.
+      {% if not is_observer %}
+      You have not been selected. Please wait.
+      {% endif %}
+      The following players are on the mission:
+      <ul id="chosen-for-mission">
+        {% for chosen_player in chosen %}
+        <li>{{ chosen_player.name }}</li>
+        {% endfor %}
+      </ul>
     </p>
 
   </div>

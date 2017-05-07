@@ -3,12 +3,26 @@ from django import forms
 from .models import Game, Player
 
 class NewGameForm(forms.Form):
-    name = forms.CharField(label='Name', max_length=80)
+    name = forms.CharField(label='Name', max_length=80, required=False)
+
+    def clean(self):
+        cleaned_data = super(NewGameForm, self).clean()
+
+        name = cleaned_data.get("name")
+        observer = 'observe' in self.data
+
+        if observer and (name is None or len(name) > 0):
+            self.add_error('name', "Only fill in 'Name' field if you will be playing (not observing) using this device.")
+        elif not observer and len(name) == 0:
+            self.add_error('name', "Player name must be non-empty (did you mean to click 'Create as observer'?).")
+
+        if name is None or observer:
+            cleaned_data["name"] = None
 
 class JoinGameForm(forms.Form):
     game = forms.CharField(label='Access code',
                            max_length=Game.ACCESS_CODE_LENGTH)
-    player = forms.CharField(label='Name', max_length=80)
+    player = forms.CharField(label='Name', max_length=80, required=False)
 
     def clean_game(self):
         data = self.cleaned_data['game']
@@ -23,8 +37,17 @@ class JoinGameForm(forms.Form):
 
         game = cleaned_data.get("game")
         name = cleaned_data.get("player")
+        observer = 'observe' in self.data
+        cleaned_data["observer"] = observer
 
-        if game is None or name is None:
+        if observer and (name is None or len(name) > 0):
+            self.add_error('player', "Leave 'Name' field blank if observing or use 'Join' button to join as a player.")
+        elif not observer and len(name) == 0:
+            self.add_error('player', "Player name must be non-empty (did you mean to click 'Observe'?).")
+            return
+
+        if game is None or name is None or observer:
+            cleaned_data["player"] = None
             return
 
         try:
@@ -41,7 +64,7 @@ class JoinGameForm(forms.Form):
                 player = Player.objects.create(game=game, name=name)
                 cleaned_data["player"] = player
             else:
-                self.add_error('player', "That game has already started. If you want to rejoin, please enter your name exactly as you did before.")
+                self.add_error('player', "That game has already started. If you want to rejoin, please enter your name exactly as you did before or select \"Observe\" if you just want to display the game status.")
 
 class StartGameForm(forms.Form):
     display_history = forms.BooleanField(required=False, initial=True,

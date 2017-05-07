@@ -9,7 +9,7 @@
     <p><b>Ready up!</b></p>
     <ul>
       {% for p in players %}
-      <li id="player-{{ p.order }}" class="{% if p.ready %}ready{% endif %}">
+      <li id="player-{{ p.order }}" class="{% if p.ready %}ready{% endif %}{% if p == player %} this-player{% endif %}">
         {{ p.name }}
       </li>
       {% endfor %}
@@ -17,8 +17,10 @@
     <form method="post">
       {% csrf_token %}
       <div class="button-container">
+        {% if not is_observer %}
         <button type="submit" formaction="{% url 'ready' access_code=access_code player_secret=player_secret %}">Ready</button>
-        <button type="submit" formaction="{% url 'cancel_game' access_code=access_code player_secret=player_secret %}">Return to Lobby</button>
+        {% endif %}
+        <button type="submit" formaction="{% if is_observer %}{% url 'observe_cancel_game' access_code=access_code %}{% else %}{% url 'cancel_game' access_code=access_code player_secret=player_secret %}{% endif %}">Return to Lobby</button>
       </div>
     </form>
   </div>
