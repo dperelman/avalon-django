@@ -53,7 +53,11 @@ def enter_code(request):
             game = form.cleaned_data.get('game')
             player = form.cleaned_data.get('player')
             if player is None:
-                return redirect('observe', access_code=game.access_code)
+                if game.game_phase == Game.GAME_PHASE_END:
+                    return redirect('game_results',
+                                    access_code=game.access_code)
+                else:
+                    return redirect('observe', access_code=game.access_code)
             return redirect('game',
                             access_code=game.access_code,
                             player_secret=player.secret_id)
@@ -83,9 +87,12 @@ def new_game(request):
 @lookup_access_code
 @require_safe
 def join_game(request, game):
-    form = JoinGameForm(initial={'game': game.access_code})
-    return render(request, 'join_game.html', {'access_code': game.access_code,
-                                              'form': form})
+    if game.game_phase == Game.GAME_PHASE_END:
+        return redirect('game_results', access_code=game.access_code)
+    else:
+        form = JoinGameForm(initial={'game': game.access_code})
+        return render(request, 'join_game.html',
+                      {'access_code': game.access_code, 'form': form})
 
 @lookup_access_code
 @require_safe

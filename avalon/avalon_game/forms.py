@@ -40,6 +40,10 @@ class JoinGameForm(forms.Form):
         observer = 'observe' in self.data
         cleaned_data["observer"] = observer
 
+        if game.game_phase == Game.GAME_PHASE_END:
+            cleaned_data["player"] = None
+            return
+
         if observer and (name is None or len(name) > 0):
             self.add_error('player', "Leave 'Name' field blank if observing or use 'Join' button to join as a player.")
         elif not observer and len(name) == 0:
