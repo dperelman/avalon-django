@@ -1,5 +1,6 @@
 {% extends "in_game.html" %}
 
+{% block accesscode_value %}<a href = "{% url 'game_results' access_code=access_code %}">{{ access_code }} (results permalink)</a>{% endblock %}
 {% block game_content %}
 <div class="gameOver">
   <h2>{% if resistance_won %}Resistance{% else %}Spies{% endif %} Won!</h2>

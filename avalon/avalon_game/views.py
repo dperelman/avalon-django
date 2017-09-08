@@ -5,7 +5,7 @@ import random
 import qrcode
 
 from django.db import transaction
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_safe,\
                                          require_POST,\
@@ -101,6 +101,13 @@ def qr_code(request, game):
 @require_safe
 def observe(request, game):
     return _game(request, game, None)
+
+@lookup_access_code
+@require_safe
+def game_results(request, game):
+    if game.game_phase != Game.GAME_PHASE_END:
+        raise Http404()
+    return _game(request, game, None, {'results_only': True})
 
 def game_status_string(game, player):
     game_status_object = {}
@@ -214,8 +221,10 @@ def game(request, game, player):
 
     return _game(request, game, player)
 
-def _game(request, game, player):
+def _game(request, game, player, extra_context=None):
     context = game_base_context(game, player)
+    if extra_context is not None:
+        context.update(extra_context)
 
     if game.game_phase == Game.GAME_PHASE_LOBBY:
         context['form'] = StartGameForm()

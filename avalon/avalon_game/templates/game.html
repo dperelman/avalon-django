@@ -4,8 +4,9 @@
 {% block game_header %}{% endblock %}
 {% block game_content %}{% endblock %}
 {% block game_refresh %}
+{% if not results_only %}
     <div class="button-container">
-      <a href="{% if is_observer %}{% url 'observe' access_code=access_code %}{% else %}{% url 'game' access_code=access_code player_secret=player_secret %}{% endif %}" class="button" id="button-refresh">Refresh</a>
+        <a href="{% if is_observer %}{% url 'observe' access_code=access_code %}{% else %}{% url 'game' access_code=access_code player_secret=player_secret %}{% endif %}" class="button" id="button-refresh">Refresh</a>
     </div>
     <script>
       var statusObj = JSON.parse("{{ status|escapejs }}");
@@ -24,5 +25,6 @@
         }, "json");
       }, 5000);
     </script>
+{% endif %}
 {% endblock %}
 {% endblock %}

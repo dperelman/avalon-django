@@ -14,8 +14,8 @@
     {% block accesscode %}
     <div class="access-code">
       <p>
-        <span class="header">Access Code</span> {{ access_code|default:"(not in game)" }}
-        <span class="header">Name</span> {% if is_observer %}(observer){% else %}{{ player.name|default:"(not in game)" }}{% endif %}
+        <span class="header">Access Code</span> {% block accesscode_value %}{{ access_code|default:"(not in game)" }}{% endblock %}
+        {% if not results_only %}<span class="header">Name</span> {% if is_observer %}(observer){% else %}{{ player.name|default:"(not in game)" }}{% endif %}{% endif %}
       </p>
     </div>
     {% endblock %}

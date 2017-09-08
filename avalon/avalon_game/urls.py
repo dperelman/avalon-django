@@ -9,6 +9,7 @@ urlpatterns = [
     url(r'^(?P<access_code>[a-zA-Z]{6})/', include([
         url(r'^$', views.join_game, name='join_game'),
         url(r'^qr/$', views.qr_code, name='qr_code'),
+        url(r'^results/$', views.game_results, name='game_results'),
         url(r'^observe/', include([
             url(r'^$', views.observe, name='observe'),
             url(r'^status/$', views.observe_status, name='observe_status'),
