@@ -87,6 +87,8 @@ class JoinGameForm(forms.Form):
 class StartGameForm(forms.Form):
     display_history = forms.BooleanField(required=False, initial=True,
                                          label="show history table")
+    private_voting = forms.BooleanField(required=False, initial=True,
+                                         label="private voting (only reveal vote totals)")
     merlin = forms.BooleanField(required=False, initial=True, label="Merlin")
     percival = forms.BooleanField(required=False, initial=True,
                                   label="Percival")

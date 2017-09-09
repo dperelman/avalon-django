@@ -27,6 +27,7 @@ class Game(models.Model):
     game_phase = models.IntegerField(default=GAME_PHASE_LOBBY)
     times_started = models.IntegerField(null=False, default=0)
     display_history = models.NullBooleanField()
+    private_voting = models.NullBooleanField()
     player_assassinated = models.ForeignKey('Player', null=True, default=None,
                                             related_name='+')
     created = models.DateTimeField()

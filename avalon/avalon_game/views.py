@@ -211,6 +211,8 @@ def game_base_context(game, player):
 
     if game.display_history is not None:
         context['display_history'] = game.display_history
+    if game.private_voting is not None:
+        context['private_voting'] = game.private_voting
 
     try:
         round_scores = {}
@@ -405,6 +407,7 @@ def _start(request, game, player):
             form.add_error(None, "There will only be %d spies. Select no more than that many special roles for spies." % num_spies)
         else:
             game.display_history = form.cleaned_data.get('display_history')
+            game.private_voting = form.cleaned_data.get('private_voting')
             game.game_phase = Game.GAME_PHASE_ROLE
             game.times_started += 1
 
