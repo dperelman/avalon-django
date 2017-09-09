@@ -54,6 +54,15 @@ class JoinGameForm(forms.Form):
             cleaned_data["player"] = None
             return
 
+        if game.previous_game is not None:
+            try:
+                player = Player.objects.get(game=game.previous_game, name=name)
+                if not player.is_expired():
+                    self.add_error('player', "Please choose a different name; there is already a player using that name.")
+                    self.add_error('player', "Please try again in a few seconds if you are trying to rejoin.")
+            except Player.DoesNotExist:
+                pass
+
         try:
             player = Player.objects.get(game=game, name=name)
             if player.is_expired():

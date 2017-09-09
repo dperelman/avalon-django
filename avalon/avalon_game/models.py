@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import random
 import string
 
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
 
 from .helpers import mission_size, mission_size_string
@@ -31,6 +31,8 @@ class Game(models.Model):
                                             related_name='+')
     created = models.DateTimeField()
     ended = models.DateTimeField(null=True, default=None)
+    next_game = models.OneToOneField('self', null=True, default=None,
+                                     related_name='previous_game')
 
     # from http://stackoverflow.com/a/11821832
     def save(self, *args, **kwargs):
@@ -60,6 +62,15 @@ class Game(models.Model):
 
     def num_players(self):
         return self.player_set.count()
+
+    # The global settings make everything atomic... this is just to annotate
+    #   that it's important that we never create two next games.
+    @transaction.atomic
+    def create_or_get_next_game(self):
+        if self.next_game is None and self.game_phase == self.GAME_PHASE_END:
+            self.next_game = Game.objects.create()
+            self.save()
+        return self.next_game
 
 class Player(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE, db_index=True)

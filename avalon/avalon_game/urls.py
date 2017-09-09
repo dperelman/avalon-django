@@ -15,6 +15,7 @@ urlpatterns = [
             url(r'^status/$', views.observe_status, name='observe_status'),
             url(r'^start/$', views.observe_start, name='observe_start'),
             url(r'^cancel_game/$', views.observe_cancel_game, name='observe_cancel_game'),
+            url(r'^next_game/$', views.observe_next_game, name='observe_next_game'),
         ])),
         url(r'(?P<player_secret>[a-z]{8})/', include([
             url(r'^$', views.game, name='game'),
@@ -22,6 +23,7 @@ urlpatterns = [
             url(r'^start/$', views.start, name='start'),
             url(r'^leave/$', views.leave, name='leave'),
             url(r'^ready/$', views.ready, name='ready'),
+            url(r'^next_game/$', views.next_game, name='next_game'),
             url(r'^cancel_game/$', views.cancel_game, name='cancel_game'),
             url(r'^(?P<round_num>[1-5])/(?P<vote_num>[1-5])/', include([
                 url(r'^vote/(?P<vote>(approve|reject|cancel))/$', views.vote, name='vote'),

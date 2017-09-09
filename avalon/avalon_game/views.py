@@ -107,6 +107,8 @@ def qr_code(request, game):
 @lookup_access_code
 @require_safe
 def observe(request, game):
+    if game.game_phase == game.GAME_PHASE_END and game.next_game is not None:
+        return redirect('observe', access_code=game.next_game.access_code)
     return _game(request, game, None)
 
 @lookup_access_code
@@ -151,6 +153,8 @@ def game_status_string(game, player):
                 game_status_object['player_vote'] = 'reject'
         else:
             game_status_object['player_vote'] = 'none'
+    if game.game_phase == Game.GAME_PHASE_END and game.next_game is not None:
+        game_status_object['next_game'] = game.next_game.access_code
 
     return json.dumps(game_status_object)
 
@@ -314,6 +318,16 @@ def _game(request, game, player, extra_context=None):
 
         if game.player_assassinated:
             context['player_assassinated'] = game.player_assassinated
+
+        try:
+            context['previous_game'] = game.previous_game
+        except Game.DoesNotExist:
+            pass
+        if game.next_game:
+            if game.next_game.game_phase != Game.GAME_PHASE_END:
+                context['next_game_ongoing'] = True
+            context['next_game'] = game.next_game
+
         return render(request, 'end.html', context)
 
 @lookup_access_code
@@ -647,3 +661,32 @@ def assassinate(request, game, player, target):
 
     return redirect('game', access_code=game.access_code,
                     player_secret=player.secret_id)
+
+@lookup_access_code
+@lookup_player_secret
+@require_safe
+def next_game(request, game, player):
+    if game.game_phase != Game.GAME_PHASE_END:
+        raise Http404()
+    next_game = game.create_or_get_next_game()
+    if next_game.game_phase == Game.GAME_PHASE_LOBBY:
+        try:
+            next_player = Player.objects.get(game=next_game,
+                                             name=player.name)
+            if not next_player.is_expired():
+                redirect('join_game', access_code=next_game.access_code)
+        except Player.DoesNotExist:
+            next_player = Player.objects.create(game=next_game,
+                                                name=player.name)
+        return redirect('game', access_code=next_game.access_code,
+                        player_secret=next_player.secret_id)
+    else:
+        raise Http404()
+
+@lookup_access_code
+@require_safe
+def observe_next_game(request, game):
+    if game.game_phase != Game.GAME_PHASE_END:
+        raise Http404()
+    next_game = game.create_or_get_next_game()
+    redirect('observe_game', access_code=next_game.access_code)
