@@ -5,7 +5,7 @@
     <h2>Mission Phase</h2>
 
     <p>
-      The vote has passed.
+      The vote has passed (<b class="approve">{{ vote.accepts }}</b>-<b class="reject">{{ vote.rejects }}</b>).
       {% if not is_observer %}
       You have not been selected. Please wait.
       {% endif %}

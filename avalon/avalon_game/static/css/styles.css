@@ -307,11 +307,11 @@ li.player, li.player form {
   padding: 0;
   margin: 0;
 }
-#history tbody td.accept:before {
+#history tbody td.accept:after, #history tbody th.accept:after {
   color: green;
   content: "\2713";
 }
-#history tbody td.reject:before {
+#history tbody td.reject:after, #history tbody th.reject:after{
   color: brown;
   content: "\2717";
 }

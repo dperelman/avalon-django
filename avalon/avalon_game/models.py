@@ -27,6 +27,7 @@ class Game(models.Model):
     game_phase = models.IntegerField(default=GAME_PHASE_LOBBY)
     times_started = models.IntegerField(null=False, default=0)
     display_history = models.NullBooleanField()
+    private_voting = models.NullBooleanField()
     player_assassinated = models.ForeignKey('Player', null=True, default=None,
                                             related_name='+')
     created = models.DateTimeField()
@@ -283,12 +284,25 @@ class VoteRound(models.Model):
     def is_final_vote(self):
         return self.vote_num == 5
 
-    def team_approved(self):
+    def previous_vote(self):
+        if self.is_first_vote():
+            return None
+        return VoteRound.objects.get(game_round=self.game_round,
+                                     vote_num=self.vote_num-1)
+
+    def vote_totals(self):
         num_players = self.game_round.game.num_players()
         if self.playervote_set.count() == num_players:
             accepts = self.playervote_set.filter(accept=True).count()
             rejects = num_players - accepts
-            return accepts > rejects
+            return {'accepts': accepts, 'rejects': rejects}
+        else:
+            return None
+
+    def team_approved(self):
+        votes = self.vote_totals()
+        if votes:
+            return votes['accepts'] > votes['rejects']
         else:
             return None
 
