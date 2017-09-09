@@ -79,7 +79,7 @@
 
 {% block history %}
 {{ debug }}
-{% if not display_history %}
+{% if not display_history and not game_over %}
 <table id="player_order">
     <thead>
         <tr>
@@ -124,7 +124,7 @@
       <td class="accept">{{ vote_round.vote_totals.accepts }}</td>
       <td class="reject">{{ vote_round.vote_totals.rejects }}</td>
       {% for pv in vote_round.playervote_set.all|dictsort:'player.order' %}
-      <td class="{% if pv.player == vote_round.leader %}leader{% endif %} {% if pv.player in vote_round.chosen.all %}chosen {% if game_over and vote_round.team_approved %}{% if pv.player in game_round.played_fail %}played-fail{% else %}played-success{% endif %}{% endif %}{% endif %} {% if not private_voting %}{% if pv.accept %}accept{% else %}reject{% endif %}{% endif %}"></td>
+      <td class="{% if pv.player == vote_round.leader %}leader{% endif %} {% if pv.player in vote_round.chosen.all %}chosen {% if game_over and vote_round.team_approved %}{% if pv.player in game_round.played_fail %}played-fail{% else %}played-success{% endif %}{% endif %}{% endif %} {% if not private_voting or game_over %}{% if pv.accept %}accept{% else %}reject{% endif %}{% endif %}"></td>
       {% endfor %}
       {% else %}
       <td class="accept"></td>
