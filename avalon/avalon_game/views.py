@@ -200,11 +200,13 @@ def game_base_context(game, player):
     spy_roles = [p.role_string() for p in players
                  if p.is_spy() and p.role != Player.ROLE_SPY]
     if spy_roles:
+        spy_roles.sort()
         context['spy_roles'] = spy_roles
     context['num_resistance'] = len([p for p in players if not p.is_spy()])
     resistance_roles = [p.role_string() for p in players
                         if not p.is_spy() and p.role != Player.ROLE_GOOD]
     if resistance_roles:
+        resistance_roles.sort()
         context['resistance_roles'] = resistance_roles
 
     if game.display_history is not None:
