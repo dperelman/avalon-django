@@ -1,6 +1,26 @@
 {% extends "game.html" %}
 
 {% block game_header %}
+  <div class="available-roles">
+    There are <b>{{ num_players }}</b> players:
+    <b class="spy">{{ num_spies }} spies</b>
+    {% if spy_roles %}
+      (including special roles
+      {% for role in spy_roles %}
+        {% if forloop.last and not forloop.first %}and{% endif %}
+        <b class = "spy">{{ role }}</b>
+      {% endfor %})
+    {% endif %}
+    and
+    <b class = "resistance">{{ num_resistance }} resistance</b>
+    {% if resistance_roles %}
+      (including special roles
+      {% for role in resistance_roles %}
+        {% if forloop.last and not forloop.first %}and{% endif %}
+        <b class = "resistance">{{ role }}</b>
+      {% endfor %})
+    {% endif %}
+  </div>
   <div class="role-info">
     <hr class="small-hr">
     {% if not is_observer %}
