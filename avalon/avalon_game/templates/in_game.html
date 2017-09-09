@@ -59,7 +59,22 @@
 
 {% block history %}
 {{ debug }}
-{% if display_history %}
+{% if not display_history %}
+<table id="player_order">
+    <thead>
+        <tr>
+            <th>Leader order</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in players %}
+        <tr>
+            <td>{{ p.name }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
 <table id="history">
   <thead>
     <tr>
