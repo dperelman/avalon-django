@@ -22,13 +22,13 @@
     {% block score %}
     <div class="score">
       {% for round_num, round in round_scores.items %}
-      <div class="score-box {{ round.result }}"><p>{{ round.mission_size }}</p></div>
+      <div class="score-box {{ round.result }}"><p id="score-box-{{ round_num }}">{{ round.mission_size }}</p></div>
       {% empty %}
-      <div class="score-box"><p></p></div>
-      <div class="score-box"><p></p></div>
-      <div class="score-box"><p></p></div>
-      <div class="score-box"><p></p></div>
-      <div class="score-box"><p></p></div>
+      <div class="score-box"><p id="score-box-1"></p></div>
+      <div class="score-box"><p id="score-box-2"></p></div>
+      <div class="score-box"><p id="score-box-3"></p></div>
+      <div class="score-box"><p id="score-box-4"></p></div>
+      <div class="score-box"><p id="score-box-5"></p></div>
       {% endfor %}
     </div>
     {% endblock %}

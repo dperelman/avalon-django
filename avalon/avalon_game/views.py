@@ -128,6 +128,13 @@ def game_status_string(game, player):
 
     if game.game_phase == Game.GAME_PHASE_LOBBY:
         game_status_object['players'] = [p.name for p in players]
+        try:
+            rounds = [mission_size_string(mission_size(num_players=num_players,
+                                                       round_num=round_num))
+                      for round_num in range(1,6)]
+        except ValueError:
+            rounds = ['' for round_num in range(1,6)]
+        game_status_object['rounds'] = rounds
     elif game.game_phase == Game.GAME_PHASE_ROLE:
         game_status_object['times_started'] = game.times_started
         ready_players = game.player_set.filter(ready=True).order_by('order')
