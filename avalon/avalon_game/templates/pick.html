@@ -5,7 +5,8 @@
     <h2>Pick Phase</h2>
     {% if vote_rejected %}
       <p class="red">
-        The previous vote has been rejected. You are now the leader.
+        The previous vote has been rejected (<b class="approve">{{ previous_vote.accepts }}</b>-<b class="reject">{{previous_vote.rejects }}</b>).
+        You are now the leader.
       </p>
     {% endif %}
     This will be vote #{{ vote_num }} of 5 for this mission.

@@ -269,7 +269,10 @@ def _game(request, game, player, extra_context=None):
         vote_round = VoteRound.objects.get_current_vote_round(game=game)
         assert vote_round.vote_status == VoteRound.VOTE_STATUS_WAITING
         context['chosen'] = vote_round.chosen.order_by('order').all()
-        context['vote_rejected'] = not vote_round.is_first_vote()
+        vote_rejected = not vote_round.is_first_vote()
+        context['vote_rejected'] = vote_rejected
+        if vote_rejected:
+            context['previous_vote'] = vote_round.previous_vote().vote_totals()
         context['leader'] = vote_round.leader
         context['round_num'] = vote_round.game_round.round_num
         context['vote_num'] = vote_round.vote_num
@@ -311,6 +314,7 @@ def _game(request, game, player, extra_context=None):
         context['round_num'] = round_num
         vote_num = vote_round.vote_num
         context['vote_num'] = vote_num
+        context['vote'] = vote_round.vote_totals()
         if player in chosen:
             game_round = vote_round.game_round
             mission_action = game_round.missionaction_set.filter(player=player)
