@@ -196,6 +196,17 @@ def game_base_context(game, player):
     context['num_players'] = num_players
     context['game_rounds'] = game.gameround_set.all().order_by('round_num')
 
+    context['num_spies'] = len([p for p in players if p.is_spy()])
+    spy_roles = [p.role_string() for p in players
+                 if p.is_spy() and p.role != Player.ROLE_SPY]
+    if spy_roles:
+        context['spy_roles'] = spy_roles
+    context['num_resistance'] = len([p for p in players if not p.is_spy()])
+    resistance_roles = [p.role_string() for p in players
+                        if not p.is_spy() and p.role != Player.ROLE_GOOD]
+    if resistance_roles:
+        context['resistance_roles'] = resistance_roles
+
     if game.display_history is not None:
         context['display_history'] = game.display_history
 
