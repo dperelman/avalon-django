@@ -10,7 +10,10 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_safe,\
                                          require_POST,\
                                          require_http_methods
-from django.urls import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 
 from .forms import NewGameForm, JoinGameForm, StartGameForm
 from .helpers import mission_size, mission_size_string
