@@ -9,7 +9,10 @@
       {{ form.as_table }}
       </table>
       <div class="button-container">
-        <input type="submit" class="button button-create" value="Create"></input>
+        <input type="submit" class="button button-create" value="Create as player"></input>
+        <input type="submit" class="button button-observe" name="observe" value="Create as observer"></input>
+      </div>
+      <div class="button-container">
         <a href="{% url 'index' %}" class="button button-main-menu">Back</a>
       </div>
     </form>

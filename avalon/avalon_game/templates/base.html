@@ -13,19 +13,22 @@
   <div class="container">
     {% block accesscode %}
     <div class="access-code">
-      <p>Access Code: {{ access_code|default:"(not in game)" }}</p>
+      <p>
+        <span class="header">Access Code</span> {% block accesscode_value %}{{ access_code|default:"(not in game)" }}{% endblock %}
+        {% if not results_only %}<span class="header">Name</span> {% if is_observer %}(observer){% else %}{{ player.name|default:"(not in game)" }}{% endif %}{% endif %}
+      </p>
     </div>
     {% endblock %}
     {% block score %}
     <div class="score">
       {% for round_num, round in round_scores.items %}
-      <div class="score-box {{ round.result }}"><p>{{ round.mission_size }}</p></div>
+      <div class="score-box {{ round.result }}"><p id="score-box-{{ round_num }}">{{ round.mission_size }}</p></div>
       {% empty %}
-      <div class="score-box"><p></p></div>
-      <div class="score-box"><p></p></div>
-      <div class="score-box"><p></p></div>
-      <div class="score-box"><p></p></div>
-      <div class="score-box"><p></p></div>
+      <div class="score-box"><p id="score-box-1"></p></div>
+      <div class="score-box"><p id="score-box-2"></p></div>
+      <div class="score-box"><p id="score-box-3"></p></div>
+      <div class="score-box"><p id="score-box-4"></p></div>
+      <div class="score-box"><p id="score-box-5"></p></div>
       {% endfor %}
     </div>
     {% endblock %}

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import random
 import string
 
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
 
 from .helpers import mission_size, mission_size_string
@@ -27,10 +27,13 @@ class Game(models.Model):
     game_phase = models.IntegerField(default=GAME_PHASE_LOBBY)
     times_started = models.IntegerField(null=False, default=0)
     display_history = models.NullBooleanField()
+    private_voting = models.NullBooleanField()
     player_assassinated = models.ForeignKey('Player', null=True, default=None,
                                             related_name='+')
     created = models.DateTimeField()
     ended = models.DateTimeField(null=True, default=None)
+    next_game = models.OneToOneField('self', null=True, default=None,
+                                     related_name='previous_game')
 
     # from http://stackoverflow.com/a/11821832
     def save(self, *args, **kwargs):
@@ -60,6 +63,15 @@ class Game(models.Model):
 
     def num_players(self):
         return self.player_set.count()
+
+    # The global settings make everything atomic... this is just to annotate
+    #   that it's important that we never create two next games.
+    @transaction.atomic
+    def create_or_get_next_game(self):
+        if self.next_game is None and self.game_phase == self.GAME_PHASE_END:
+            self.next_game = Game.objects.create()
+            self.save()
+        return self.next_game
 
 class Player(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE, db_index=True)
@@ -272,12 +284,25 @@ class VoteRound(models.Model):
     def is_final_vote(self):
         return self.vote_num == 5
 
-    def team_approved(self):
+    def previous_vote(self):
+        if self.is_first_vote():
+            return None
+        return VoteRound.objects.get(game_round=self.game_round,
+                                     vote_num=self.vote_num-1)
+
+    def vote_totals(self):
         num_players = self.game_round.game.num_players()
         if self.playervote_set.count() == num_players:
             accepts = self.playervote_set.filter(accept=True).count()
             rejects = num_players - accepts
-            return accepts > rejects
+            return {'accepts': accepts, 'rejects': rejects}
+        else:
+            return None
+
+    def team_approved(self):
+        votes = self.vote_totals()
+        if votes:
+            return votes['accepts'] > votes['rejects']
         else:
             return None
 

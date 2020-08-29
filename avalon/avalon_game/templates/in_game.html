@@ -1,8 +1,29 @@
 {% extends "game.html" %}
 
 {% block game_header %}
+  <div class="available-roles">
+    There are <b>{{ num_players }}</b> players:
+    <b class="spy">{{ num_spies }} spies</b>
+    {% if spy_roles %}
+      (including special roles
+      {% for role in spy_roles %}
+        {% if forloop.last and not forloop.first %}and{% endif %}
+        <b class = "spy">{{ role }}</b>
+      {% endfor %})
+    {% endif %}
+    and
+    <b class = "resistance">{{ num_resistance }} resistance</b>
+    {% if resistance_roles %}
+      (including special roles
+      {% for role in resistance_roles %}
+        {% if forloop.last and not forloop.first %}and{% endif %}
+        <b class = "resistance">{{ role }}</b>
+      {% endfor %})
+    {% endif %}
+  </div>
   <div class="role-info">
     <hr class="small-hr">
+    {% if not is_observer %}
     <div id="role-info">
       <div id="user-team">Team: <span class="{{ player.team }}">{{ player.team|title }}</span></div>
       <div id="user-role">Role: <span class="{{ player.team }}">{{ player.role_string }}</span></div>
@@ -50,6 +71,7 @@
     </button>
     <hr class="small-hr">
   </div>
+  {% endif %}
 
   <script>
     $(document).ready(function () {
@@ -63,15 +85,33 @@
 
 {% block history %}
 {{ debug }}
-{% if display_history %}
+{% if not display_history and not game_over %}
+<table id="player_order">
+    <thead>
+        <tr>
+            <th>Leader order</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in players %}
+        <tr>
+            <td>{{ p.name }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
 <table id="history">
   <thead>
     <tr>
+      <th class="accept"></th>
+      <th class="reject"></th>
       {% for p in players %}
       <th><p><span{% if game_over %} class="{{ p.team }}"{% endif %}>{{ p.name }}</span></p></th>
       {% endfor %}
     </tr>
     {% if game_over %}
+      <th colspan="2"></th>
       {% for p in players %}
       <th><p><span{% if game_over %} class="{{ p.team }}"{% endif %}>{{ p.role_string }}</span></p></th>
       {% endfor %}
@@ -87,10 +127,14 @@
       {% elif vote_round.is_voting_complete %}{% if game_over %}reject{% else %}accept-pending{% endif %}
       {% endif %}">
       {% if vote_round.is_voting_complete %}
+      <td class="accept">{{ vote_round.vote_totals.accepts }}</td>
+      <td class="reject">{{ vote_round.vote_totals.rejects }}</td>
       {% for pv in vote_round.playervote_set.all|dictsort:'player.order' %}
-      <td class="{% if pv.player == vote_round.leader %}leader{% endif %} {% if pv.player in vote_round.chosen.all %}chosen {% if game_over and vote_round.team_approved %}{% if pv.player in game_round.played_fail %}played-fail{% else %}played-success{% endif %}{% endif %}{% endif %} {% if pv.accept %}accept{% else %}reject{% endif %}"></td>
+      <td class="{% if pv.player == vote_round.leader %}leader{% endif %} {% if pv.player in vote_round.chosen.all %}chosen {% if game_over and vote_round.team_approved %}{% if pv.player in game_round.played_fail %}played-fail{% else %}played-success{% endif %}{% endif %}{% endif %} {% if not private_voting or game_over %}{% if pv.accept %}accept{% else %}reject{% endif %}{% endif %}"></td>
       {% endfor %}
       {% else %}
+      <td class="accept"></td>
+      <td class="reject"></td>
       {% for p in players %}
       <td class="{% if p == vote_round.leader %}leader{% endif %} {% if vote_round.is_team_finalized and p in vote_round.chosen.all %}chosen{% endif %}"></td>
       {% endfor %}
@@ -99,14 +143,14 @@
     {% endfor %}
     {% if game_round.mission_passed != None %}
     <tr class="summary {{ game_round.result_string }}">
-      <td colspan="{{ num_players }}">
+      <td colspan="{{ num_players|add:2 }}">
         Mission {{ game_round.round_num }} {{ game_round.result_string }}ed
         with {{ game_round.num_fails }} failures
       </td>
     </tr>
     {% elif game_over %}
     <tr class="summary fail">
-      <td colspan="{{ num_players }}">
+      <td colspan="{{ num_players|add:2 }}">
         Mission {{ game_round.round_num }} failed as the resistance was unable
         to choose a team 5 times in a row
       </td>

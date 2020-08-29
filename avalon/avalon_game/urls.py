@@ -9,12 +9,21 @@ urlpatterns = [
     url(r'^(?P<access_code>[a-zA-Z]{6})/', include([
         url(r'^$', views.join_game, name='join_game'),
         url(r'^qr/$', views.qr_code, name='qr_code'),
+        url(r'^results/$', views.game_results, name='game_results'),
+        url(r'^observe/', include([
+            url(r'^$', views.observe, name='observe'),
+            url(r'^status/$', views.observe_status, name='observe_status'),
+            url(r'^start/$', views.observe_start, name='observe_start'),
+            url(r'^cancel_game/$', views.observe_cancel_game, name='observe_cancel_game'),
+            url(r'^next_game/$', views.observe_next_game, name='observe_next_game'),
+        ])),
         url(r'(?P<player_secret>[a-z]{8})/', include([
             url(r'^$', views.game, name='game'),
             url(r'^status/$', views.status, name='status'),
             url(r'^start/$', views.start, name='start'),
             url(r'^leave/$', views.leave, name='leave'),
             url(r'^ready/$', views.ready, name='ready'),
+            url(r'^next_game/$', views.next_game, name='next_game'),
             url(r'^cancel_game/$', views.cancel_game, name='cancel_game'),
             url(r'^(?P<round_num>[1-5])/(?P<vote_num>[1-5])/', include([
                 url(r'^vote/(?P<vote>(approve|reject|cancel))/$', views.vote, name='vote'),

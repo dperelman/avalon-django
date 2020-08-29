@@ -1,5 +1,6 @@
 {% extends "in_game.html" %}
 
+{% block accesscode_value %}<a href = "{% url 'game_results' access_code=access_code %}">{{ access_code }} (results permalink)</a>{% endblock %}
 {% block game_content %}
 <div class="gameOver">
   <h2>{% if resistance_won %}Resistance{% else %}Spies{% endif %} Won!</h2>
@@ -26,6 +27,30 @@
     </table>
   </p>
 </div>
-{% endblock %}
 
-{% block game_refresh %}{% endblock %}
+{% if results_only %}
+    {% if previous_game %}
+        <div class="button-container">
+            <a href="{% url 'game_results' access_code=previous_game.access_code  %}" class="button" id="button-prev-game-results">View previous game</a>
+        </div>
+    {% endif %}
+    {% if next_game %}
+        {% if next_game_ongoing %}
+        <div class="button-container">
+            <a href="{% url 'observe' access_code=next_game.access_code  %}" class="button" id="button-observe-next-game">Observe next game</a>
+        </div>
+        {% else %}
+        <div class="button-container">
+            <a href="{% url 'game_results' access_code=next_game.access_code  %}" class="button" id="button-next-game-results">View next game</a>
+        </div>
+        {% endif %}
+    {% endif %}
+{% else %}
+<div class="button-container">
+    <a href="{% if is_observer %}{% url 'observe_next_game' access_code=access_code %}{% else %}{% url 'next_game' access_code=access_code player_secret=player.secret_id %}{% endif %}" class="button" id="button-{% if next_game %}join{% else %}start{% endif %}-next-game">{% if next_game %}Join{% else %}Start{% endif %} new game</a>
+</div>
+{% endif %}
+<div class="button-container">
+    <a href="{% url 'index' %}" class="button" id="button-home">Exit game</a>
+</div>
+{% endblock %}
