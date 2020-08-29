@@ -106,7 +106,6 @@ input[type="text"] {
 
 .spy {
   color: #FB6C6C;
-  border: #FB6C6C solid 1px;
 }
 
 .role {
@@ -239,10 +238,6 @@ label {
   display: none;
 }
 
-.role-info p {
-  font-size: 12px;
-}
-
 hr.small-hr {
   margin-top: 10px;
   margin-bottom: 10px;
@@ -370,3 +365,28 @@ li.player, li.player form {
 #history tbody td.chosen.played-success {
   border: solid #000044 5px;
 }
+
+/* ************************************** */
+
+#role-info-hidden {
+  width: 80%;
+}
+
+.spies {
+  color: #FB6C6C;
+}
+
+.spies li {
+  position: relative;
+  list-style: none;
+  padding: 0 0 0 16px;
+  margin: 0;
+  border-bottom-style: none;
+}
+
+#role-info {
+  width: 40%;
+  margin: auto;
+  text-align: left;
+}
+

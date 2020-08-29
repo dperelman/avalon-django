@@ -4,24 +4,29 @@
   <div class="role-info">
     <hr class="small-hr">
     <div id="role-info">
-      <p>Team: <b class="{{ player.team }}">{{ player.team|title }}</b> | Role: {{ player.role_string }}</p>
+      <div id="user-team">Team: <span class="{{ player.team }}">{{ player.team|title }}</span></div>
+      <div id="user-role">Role: <span class="{{ player.team }}">{{ player.role_string }}</span></div>
 
       {% if player.is_spy and not player.is_oberon %}
       <p>Other spies:
+        <ul class="spies">
         {% for spy in visible_spies %}
-        {% if spy != player %}
-        <b class="spy">{{ spy.name }} </b>
-        {% endif %}
+          {% if spy != player %}
+            <li>{{ spy.name }}</li>
+          {% endif %}
         {% endfor %}
+        </ul>
       </p>
       {% endif %}
 
       {% if player.is_merlin %}
-      <p>The spies {% if game_has_mordred %}(except Mordred){% endif %} are:
+      <div>The spies {% if game_has_mordred %}(except Mordred){% endif %} are:
+        <ul class="spies">
         {% for spy in visible_spies %}
-        <b class="spy">{{ spy.name }} </b>
+          <li>{{ spy.name }}</li>
         {% endfor %}
-      </p>
+        </ul>
+      </div>
       {% endif %}
 
       {% if player.is_percival %}
@@ -29,7 +34,7 @@
       {% endif %}
 
       {% if player.is_assassin %}
-      <p>Try to see if you can spot who the Merlin is. You'll have a chance to identify him at the end of the game to win it.</p>
+      <p>Try to identify Merlin. You'll have a chance to assassinate him at the end of the game if you have not already won.</p>
       {% endif %}
 
       {% if player.is_morgana %}
@@ -40,9 +45,10 @@
       <p>Merlin does not know you are a spy.</p>
       {% endif %}
     </div>
-    <p id="role-info-hidden">
+    <button id="role-info-hidden">
       Tap to view role info
-    </p>
+    </button>
+    <hr class="small-hr">
   </div>
 
   <script>
