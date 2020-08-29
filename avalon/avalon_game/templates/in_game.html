@@ -25,7 +25,15 @@
     <hr class="small-hr">
     {% if not is_observer %}
     <div id="role-info">
-      <div id="user-team">Team: <span class="{{ player.team }}">{{ player.team|title }}</span></div>
+      <div id="user-team">Team:
+         <span class="{{ player.team }}">
+           {% if player.team == 'resistance'%}
+           Knights of Avalon
+             {% else %}
+           Minions of Mordred
+           {% endif %}
+         </span>
+      </div>
       <div id="user-role">Role: <span class="{{ player.team }}">{{ player.role_string }}</span></div>
 
       {% if player.is_spy and not player.is_oberon %}
