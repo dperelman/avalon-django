@@ -12,7 +12,7 @@
       {% endfor %})
     {% endif %}
     and
-    <b class = "resistance">{{ num_resistance }} resistance</b>
+    <b class = "resistance">{{ num_resistance }} Knights of Avalon</b>
     {% if resistance_roles %}
       (including special roles
       {% for role in resistance_roles %}
@@ -151,7 +151,7 @@
     {% elif game_over %}
     <tr class="summary fail">
       <td colspan="{{ num_players|add:2 }}">
-        Mission {{ game_round.round_num }} failed as the resistance was unable
+        Mission {{ game_round.round_num }} failed as the Knights of Avalon were unable
         to choose a team 5 times in a row
       </td>
     </tr>

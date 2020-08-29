@@ -649,7 +649,7 @@ def mission(request, game, player, round_num, mission_action):
                 spy_wins = game.gameround_set.filter(mission_passed=False)\
                                              .count()
                 if res_wins == 3:
-                    # resistance wins... except for assassin
+                    # Knights wins... except for assassin
                     game.game_phase = Game.GAME_PHASE_ASSASSIN
                     game.save()
                 elif spy_wins == 3:
