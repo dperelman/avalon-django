@@ -205,7 +205,7 @@ def game_base_context(game, player):
     context['num_resistance'] = len([p for p in players if not p.is_spy()])
     resistance_roles = [p.role_string() for p in players
                         if not p.is_spy() and p.role != Player.ROLE_GOOD]
-    if resistance_roles:
+    if resistance_roles and all(r is not None for r in resistance_roles):
         resistance_roles.sort()
         context['resistance_roles'] = resistance_roles
 

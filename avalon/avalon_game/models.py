@@ -29,11 +29,13 @@ class Game(models.Model):
     display_history = models.NullBooleanField()
     private_voting = models.NullBooleanField()
     player_assassinated = models.ForeignKey('Player', null=True, default=None,
-                                            related_name='+')
+                                            related_name='+',
+                                            on_delete=models.PROTECT)
     created = models.DateTimeField()
     ended = models.DateTimeField(null=True, default=None)
     next_game = models.OneToOneField('self', null=True, default=None,
-                                     related_name='previous_game')
+                                     related_name='previous_game',
+                                     on_delete=models.SET_DEFAULT)
 
     # from http://stackoverflow.com/a/11821832
     def save(self, *args, **kwargs):
