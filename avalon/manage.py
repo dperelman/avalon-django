@@ -1,6 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
 import os
 import sys
+
+sys.path.append('/home/paderball/projects/django')
 
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "avalon.settings")
